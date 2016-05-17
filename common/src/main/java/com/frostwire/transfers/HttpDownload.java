@@ -1,6 +1,6 @@
 /*
  * Created by Angel Leon (@gubatron), Alden Torres (aldenml)
- * Copyright (c) 2011, 2012, FrostWire(TM). All rights reserved.
+ * Copyright (c) 2011-2016, FrostWire(R). All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,18 @@ package com.frostwire.transfers;
  * @author gubatron
  * @author aldenml
  */
-public interface UploadTransfer extends Transfer {
+public class HttpDownload extends BaseHttpDownload {
 
-    public boolean isUploading();
+    public HttpDownload(Info info) {
+        super(info);
+    }
+
+    public void start() {
+        super.start(info.url(), tempPath, false);
+    }
+
+    @Override
+    protected void onFinishing() {
+        moveAndComplete(tempPath, savePath);
+    }
 }

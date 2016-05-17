@@ -18,37 +18,35 @@
 
 package com.frostwire.android.gui.transfers;
 
-import com.frostwire.search.SearchResult;
-
-import java.io.File;
+import android.net.Uri;
+import com.frostwire.android.gui.Librarian;
+import com.frostwire.android.gui.services.Engine;
+import com.frostwire.search.soundcloud.SoundcloudSearchResult;
+import com.frostwire.transfers.SoundcloudDownload;
 
 /**
- * @author gubatron
  * @author aldenml
+ * @author gubatron
  */
-public abstract class TemporaryDownloadTransfer<T extends SearchResult> implements DownloadTransfer {
+public class UISoundcloudDownload extends SoundcloudDownload {
 
-    protected File savePath;
-    protected HttpDownload delegate;
-    protected T sr;
+    private final TransferManager manager;
 
-    @Override
-    public File getSavePath() {
-        File path = savePath;
-
-        if (savePath == null && delegate != null) {
-            path = delegate.getSavePath();
-        }
-
-        return path;
+    public UISoundcloudDownload(TransferManager manager, SoundcloudSearchResult sr) {
+        super(sr);
+        this.manager = manager;
     }
 
     @Override
-    public String getDetailsUrl() {
-        return sr.getDetailsUrl();
+    public void remove(boolean deleteData) {
+        super.remove(deleteData);
+
+        manager.remove(this);
     }
 
-    public T getTag() {
-        return sr;
+    @Override
+    protected void onComplete() {
+        manager.incrementDownloadsToReview();
+        Engine.instance().notifyDownloadFinished(getDisplayName(), savePath);
     }
 }
