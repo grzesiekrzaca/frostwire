@@ -24,7 +24,6 @@ import android.os.AsyncTask;
 import android.widget.ImageView;
 
 import com.frostwire.android.R;
-import com.andrew.apollo.utils.ApolloUtils;
 import com.andrew.apollo.utils.ThemeUtils;
 import com.frostwire.android.util.ImageLoader;
 
@@ -110,16 +109,6 @@ public abstract class ImageWorker {
         mImageCache = cacheCallback;
     }
 
-    /**
-     * Closes the disk cache associated with this ImageCache object. Note that
-     * this includes disk access so this should not be executed on the main/UI
-     * thread.
-     */
-    public void close() {
-        if (mImageCache != null) {
-            mImageCache.close();
-        }
-    }
 
     /**
      * flush() is called to synchronize up other methods that are accessing the
@@ -171,24 +160,10 @@ public abstract class ImageWorker {
         private String mKey;
 
         /**
-         * Artist name param
-         */
-        private String mArtistName;
-
-        /**
-         * Album name parm
-         */
-        private String mAlbumName;
-
-        /**
          * The album ID used to find the corresponding artwork
          */
         private long mAlbumId;
 
-        /**
-         * The URL of an image to download
-         */
-        private String mUrl;
 
         /**
          * Constructor of <code>BitmapWorkerTask</code>
@@ -278,37 +253,6 @@ public abstract class ImageWorker {
             }
             return null;
         }
-    }
-
-    /**
-     * Calls {@code cancel()} in the worker task
-     *
-     * @param imageView the {@link ImageView} to use
-     */
-    public static final void cancelWork(final ImageView imageView) {
-        final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
-        if (bitmapWorkerTask != null) {
-            bitmapWorkerTask.cancel(true);
-        }
-    }
-
-    /**
-     * Returns true if the current work has been canceled or if there was no
-     * work in progress on this image view. Returns false if the work in
-     * progress deals with the same data. The work is not stopped in that case.
-     */
-    public static final boolean executePotentialWork(final Object data, final ImageView imageView) {
-        final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
-        if (bitmapWorkerTask != null) {
-            final Object bitmapData = bitmapWorkerTask.mKey;
-            if (bitmapData == null || !bitmapData.equals(data)) {
-                bitmapWorkerTask.cancel(true);
-            } else {
-                // The same work is already in progress
-                return false;
-            }
-        }
-        return true;
     }
 
     /**
@@ -406,17 +350,6 @@ public abstract class ImageWorker {
             }
         }*/
     }
-
-    /**
-     * Subclasses should override this to define any processing or work that
-     * must happen to produce the final {@link Bitmap}. This will be executed in
-     * a background thread and be long running.
-     *
-     * @param key The key to identify which image to process, as provided by
-     *            {@link ImageWorker#loadImage(mKey, ImageView)}
-     * @return The processed {@link Bitmap}.
-     */
-    protected abstract Bitmap processBitmap(String key);
 
     /**
      * Used to define what type of image URL to fetch for, artist or album.
