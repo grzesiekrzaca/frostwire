@@ -31,6 +31,8 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
 import android.widget.ImageView;
+
+import com.andrew.apollo.utils.BitmapUtils;
 import com.frostwire.android.gui.services.Engine;
 import com.frostwire.util.Logger;
 import com.squareup.picasso.*;
@@ -63,6 +65,8 @@ public final class ImageLoader {
 
     private static final String METADATA_AUTHORITY = "metadata";
 
+    private static final String PLAYLIST_AUTHORITY = "playlist";
+
     public static final Uri APPLICATION_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + APPLICATION_AUTHORITY);
 
     public static final Uri ALBUM_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + ALBUM_AUTHORITY);
@@ -70,6 +74,8 @@ public final class ImageLoader {
     public static final Uri ARTIST_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + ARTIST_AUTHORITY);
 
     private static final Uri METADATA_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + METADATA_AUTHORITY);
+
+    public static final Uri PLAYLIST_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + PLAYLIST_AUTHORITY);
 
     private final ImageCache cache;
     private final Picasso picasso;
@@ -136,6 +142,10 @@ public final class ImageLoader {
         return Uri.withAppendedPath(ImageLoader.METADATA_THUMBNAILS_URI, Uri.encode(uri.toString()));
     }
 
+    public static Uri getPlaylistArtUri(String playlistName) {
+        return Uri.withAppendedPath(ImageLoader.ARTIST_THUMBNAILS_URI, playlistName);
+    }
+
     private ImageLoader(Context context) {
         File directory = SystemUtils.getCacheDir(context, "picasso");
         long diskSize = SystemUtils.calculateDiskCacheSize(directory, MIN_DISK_CACHE_SIZE, MAX_DISK_CACHE_SIZE);
@@ -147,6 +157,33 @@ public final class ImageLoader {
 
         picasso.setIndicatorsEnabled(false);
         picasso.setIndicatorsEnabled(true);
+    }
+
+    private Transformation blur = new Transformation() {
+        @Override
+        public Bitmap transform(Bitmap source) {
+            Bitmap blurred = BitmapUtils.createBlurredBitmap(source);
+            source.recycle();
+            return blurred;
+        }
+
+        @Override
+        public String key() {
+            return "blurred";
+        }
+    };
+
+    public void loadAndBlur(Uri uri, ImageView mPhoto) {
+            picasso.load(uri).fit().transform(blur).into(mPhoto);
+    }
+
+    public void loadAndBlurWithAlternative(Uri primaryUri, final Uri secondaryUri, final ImageView mPhoto) {
+        picasso.load(primaryUri).fit().transform(blur).into(mPhoto, new Callback.EmptyCallback() {
+            @Override
+            public void onError() {
+                loadAndBlur(secondaryUri, mPhoto);
+            }
+        });
     }
 
     public void load(Uri uri, ImageView target) {
@@ -220,8 +257,7 @@ public final class ImageLoader {
             if (data == null || data.uri == null) {
                 return false;
             }
-            return false;
-//            return SCHEME_IMAGE.equals(data.uri.getScheme());
+            return SCHEME_IMAGE.equals(data.uri.getScheme());
         }
 
         @Override

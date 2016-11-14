@@ -16,10 +16,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.os.AsyncTask;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -154,12 +152,15 @@ public final class ApolloUtils {
                 Bitmap bitmap = null;
                 boolean success = true;
                 try {
-                    if (mimeType.equals(MediaStore.Audio.Albums.CONTENT_TYPE)) {
-                        bitmap = fetcher.getCachedBitmap(
-                                ImageFetcher.generateAlbumCacheKey(displayName, artistName));
+                     if(artistName != null) {
+                    bitmap = fetcher.getArtistImage(artistName);
+                } else {
+                    if (id != -1) {
+                        bitmap = fetcher.getAlbumImage(id);
                     } else {
-                        bitmap = fetcher.getCachedBitmap(displayName);
+                        bitmap = fetcher.getPlaylistImage(displayName);
                     }
+                }
                     if (bitmap == null) {
                         bitmap = fetcher.getDefaultArtwork();
                     }

@@ -336,7 +336,7 @@ public abstract class ApolloFragment<T extends ApolloFragmentAdapter<I>, I>
             title = ((Artist) mItem).mArtistName;
         }
 
-        DeleteDialog.newInstance(title, songList, null).setOnDeleteCallback(new DeleteDialog.DeleteDialogCallback() {
+        DeleteDialog.newInstance(title, songList).setOnDeleteCallback(new DeleteDialog.DeleteDialogCallback() {
             @Override
             public void onDelete(long[] id) {
                 restartLoader(true);

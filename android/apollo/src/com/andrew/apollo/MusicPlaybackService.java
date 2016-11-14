@@ -32,6 +32,7 @@ import android.media.MediaPlayer;
 import android.media.RemoteControlClient;
 import android.media.audiofx.AudioEffect;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -873,13 +874,27 @@ public class MusicPlaybackService extends Service {
         }
 
         if (!mAnyActivityInForeground && isPlaying()) {
-            mNotificationHelper.buildNotification(getAlbumName(), getArtistName(),
-                    getTrackName(), getAlbumId(), getAlbumArt(), isPlaying());
+            UpdateNotificationTask updateNotificationTask = new UpdateNotificationTask();
+            updateNotificationTask.execute();
         } else if (mAnyActivityInForeground) {
             mNotificationHelper.killNotification();
             if (!isPlaying()) {
                 updateRemoteControlClient(PLAYSTATE_STOPPED);
             }
+        }
+    }
+
+    private class UpdateNotificationTask extends AsyncTask<Void, Void, Bitmap> {
+        @Override
+        protected Bitmap doInBackground(Void... voids) {
+            return getAlbumArt();
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            mNotificationHelper.buildNotification(getAlbumName(), getArtistName(),
+                    getTrackName(), getAlbumId(), bitmap, isPlaying());
         }
     }
 
@@ -2573,8 +2588,7 @@ public class MusicPlaybackService extends Service {
     public Bitmap getAlbumArt() {
         try {
             // Return the cached artwork
-            final Bitmap bitmap = mImageFetcher.getArtwork(getAlbumName(),
-                    getAlbumId(), getArtistName());
+            final Bitmap bitmap = mImageFetcher.getAlbumImage(getAlbumId());
             return bitmap;
         } catch (Throwable e) {
             e.printStackTrace();

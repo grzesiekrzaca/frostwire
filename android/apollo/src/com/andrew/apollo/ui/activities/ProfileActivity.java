@@ -560,7 +560,7 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
                         if (isArtist()) {
                             key = mArtistName;
                         } else if (isAlbum()) {
-                            key = ImageFetcher.generateAlbumCacheKey(mProfileName, mArtistName);
+//                            key = ImageFetcher.generateAlbumCacheKey(mProfileName, mArtistName);
                         }
 
 //                        final Bitmap bitmap = ImageFetcher.decodeSampledBitmapFromFile(picturePath);
@@ -586,7 +586,6 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
      * Starts an activity for result that returns an image from the Gallery.
      */
     public void selectNewPhoto() {
-        removeFromCache();
         final Intent intent = new Intent();
         if (Build.VERSION.SDK_INT < 19) {
             intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -603,14 +602,14 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
      * image.
      */
     public void selectOldPhoto() {
-        // First remove the old image
-        removeFromCache();
-        // Apply the old photo
         if (isArtist()) {
+            mImageFetcher.invalidateArtistImageUri(mArtistName);
             mTabCarousel.setArtistProfileHeader(this, mArtistName);
         } else if (isAlbum()) {
+            mImageFetcher.invalidateAlbumImageUri(MusicUtils.getIdForAlbum(getApplicationContext(),mProfileName,mArtistName));
             mTabCarousel.setAlbumProfileHeader(this, mProfileName, mArtistName);
         } else {
+            mImageFetcher.invalidatePlaylistImageUri(mProfileName);
             mTabCarousel.setPlaylistOrGenreProfileHeader(this, mProfileName);
         }
     }
@@ -621,10 +620,11 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
      * artwork. This is specifically for fetching the image from Last.fm.
      */
     public void fetchAlbumArt() {
-        // First remove the old image
-        removeFromCache();
-        // Fetch for the artwork
-        mTabCarousel.fetchAlbumPhoto(this, mProfileName, mArtistName);
+        //unused
+//        // First remove the old image
+//        removeFromCache();
+//        // Fetch for the artwork
+//        mTabCarousel.fetchAlbumPhoto(this, mProfileName, mArtistName);
     }
 
     /**
@@ -640,21 +640,6 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
         final Intent googleSearch = new Intent(Intent.ACTION_WEB_SEARCH);
         googleSearch.putExtra(SearchManager.QUERY, query);
         startActivity(googleSearch);
-    }
-
-    /**
-     * Removes the header image from the cache.
-     */
-    private void removeFromCache() {
-        String key = mProfileName;
-        if (isArtist()) {
-            key = mArtistName;
-        } else if (isAlbum()) {
-            key = ImageFetcher.generateAlbumCacheKey(mProfileName, mArtistName);
-        }
-        mImageFetcher.removeFromCache(key);
-        // Give the disk cache a little time before requesting a new image.
-        SystemClock.sleep(80);
     }
 
     /**
