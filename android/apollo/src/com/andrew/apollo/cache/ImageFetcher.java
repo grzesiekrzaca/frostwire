@@ -15,13 +15,9 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.ImageView;
-import com.andrew.apollo.Config;
-import com.andrew.apollo.MusicPlaybackService;
 import com.andrew.apollo.utils.MusicUtils;
 import com.andrew.apollo.utils.ThemeUtils;
 import com.frostwire.android.R;
@@ -32,11 +28,6 @@ import com.frostwire.android.util.ImageLoader;
  * Class that translates image requests (contextual - artist album images) from inside the app for image loader (generic - images is an image)
  */
 public class ImageFetcher {
-
-    /**
-     * Default transition drawable fade time
-     */
-    private static final int FADE_IN_TIME = 200;
 
     /**
      * Default artwork
@@ -66,7 +57,7 @@ public class ImageFetcher {
      *
      * @param context The {@link Context} to use.
      */
-    public ImageFetcher(final Context context) {
+    private ImageFetcher(final Context context) {
         mContext = context.getApplicationContext();
         mResources = mContext.getResources();
         // Create the default artwork
@@ -87,6 +78,13 @@ public class ImageFetcher {
      */
     public static final ImageFetcher getInstance(final Context context) {
         if (sInstance == null) {
+            sInstance = getInstanceSynchronized(context);
+        }
+        return sInstance;
+    }
+
+    private static synchronized ImageFetcher getInstanceSynchronized(final Context context) {
+        if (sInstance == null) {
             sInstance = new ImageFetcher(context.getApplicationContext());
         }
         return sInstance;
@@ -98,7 +96,7 @@ public class ImageFetcher {
      */
     public void loadAlbumImage(final String artistName, final String albumName, final long albumId,
             final ImageView imageView) {
-        loadImage(generateAlbumCacheKey(albumName, artistName), artistName, albumName, albumId, imageView,
+        loadImage(artistName, albumName, albumId, imageView,
                 ImageType.ALBUM);
     }
 
@@ -106,7 +104,7 @@ public class ImageFetcher {
      * Used to fetch the current artwork.
      */
     public void loadCurrentArtwork(final ImageView imageView) {
-        loadImage(generateAlbumCacheKey(MusicUtils.getAlbumName(), MusicUtils.getArtistName()),
+        loadImage(
                 MusicUtils.getArtistName(), MusicUtils.getAlbumName(), MusicUtils.getCurrentAlbumId(),
                 imageView, ImageType.ALBUM);
     }
@@ -115,59 +113,61 @@ public class ImageFetcher {
      * Used to fetch artist images.
      */
     public void loadArtistImage(final String key, final ImageView imageView) {
-        loadImage(key, key, null, -1, imageView, ImageType.ARTIST);
+        loadImage(key, null, -1, imageView, ImageType.ARTIST);
     }
 
     /**
-     * @param key The key used to find the image to remove
+     * Used to fetch artist images.
      */
-    public void removeFromCache(final String key) {
-//        if (mImageCache != null) {
-//            mImageCache.removeFromCache(key);
-//        }
+    public void loadPlaylistImage(final String key, final ImageView imageView) {
+        loadImage(key, null, -1, imageView, ImageType.ARTIST);
     }
 
     /**
-     * @param key The key used to find the image to return
+     * Methods for changing the default images
      */
-    public Bitmap getCachedBitmap(final String key) {
-        Log.e("IF","asked for cached bitmap with key: "+(key==null?"null":key));
-//        if (mImageCache != null) {
-//            return mImageCache.getCachedBitmap(key);
-//        }
-        return getDefaultArtwork();
+
+    public void setArtistImageUri(final String artist, Uri uri) {
+        //todo save
     }
 
+    public void setAlbumImageUri(final long id, Uri uri) {
+        //todo save
+    }
 
-    /**
-     * Finds cached or downloads album art. Used in {@link MusicPlaybackService}
-     * to set the current album art in the notification and lock screen
-     *
-     * @param albumName The name of the current album
-     * @param albumId The ID of the current album
-     * @param artistName The album artist in case we should have to download
-     *            missing artwork
-     * @return The album art as an {@link Bitmap}
-     */
+    public void setPlaylistImageUri (final String playlistName, Uri uri ) {
+        //todo save
+    }
 
-    //musicplaybackservice
-    public Bitmap getArtwork(final String albumName, final long albumId, final String artistName) {
-        Log.e("IF","asked for Artwork with params albumName: "+(albumName==null?"null":albumName) + " albumId: " + albumId + " artistName "+ (artistName==null?"null":artistName));
-        // Check the disk cache
-//        Bitmap artwork = null;
-//
-//        if (artwork == null && albumName != null && mImageCache != null) {
-//            artwork = mImageCache.getBitmapFromDiskCache(
-//                    generateAlbumCacheKey(albumName, artistName));
-//        }
-//        if (artwork == null && albumId >= 0 && mImageCache != null) {
-//            // Check for local artwork
-//            artwork = mImageCache.getArtworkFromFile(mContext, albumId);
-//        }
-//        if (artwork != null) {
-//            return artwork;
-//        }
-        return getDefaultArtwork();
+    public void invalidateArtistImageUri(final String artist) {
+        //todo save and clear cache
+    }
+
+    public void invalidateAlbumImageUri(final long id) {
+        //todo save and clear cache
+    }
+
+    public void invalidatePlaylistImageUri (final String playlistName) {
+        //todo save and clear cache
+    }
+
+    public Bitmap getArtistImage(final String artist) {
+        final ImageLoader loader = ImageLoader.getInstance(mContext.getApplicationContext());
+        Bitmap bitmap = loader.get(ImageLoader.getArtistArtUri(artist));
+        return (bitmap != null) ? bitmap : getDefaultArtwork();
+    }
+
+    public Bitmap getAlbumImage(final Long id) {
+        final ImageLoader loader = ImageLoader.getInstance(mContext.getApplicationContext());
+        Bitmap bitmap = loader.get(ImageLoader.getAlbumArtUri(id));
+        return (bitmap != null) ? bitmap : getDefaultArtwork();
+    }
+
+    public Bitmap getPlaylistImage(final String playlistName) {
+        //todo make it work
+        final ImageLoader loader = ImageLoader.getInstance(mContext.getApplicationContext());
+        Bitmap bitmap = loader.get(ImageLoader.getPlaylistArtUri(playlistName));
+        return (bitmap != null) ? bitmap : getDefaultArtwork();
     }
 
     /**
@@ -181,7 +181,6 @@ public class ImageFetcher {
     /**
      * Called to fetch the artist or ablum art.
      *
-     * @param key The unique identifier for the image.
      * @param artistName The artist name for the Last.fm API.
      * @param albumName The album name for the Last.fm API.
      * @param albumId The album art index, to check for missing artwork.
@@ -189,9 +188,9 @@ public class ImageFetcher {
      *            {@link Bitmap}.
      * @param imageType The type of image URL to fetch for.
      */
-    protected void loadImage(final String key, final String artistName, final String albumName,
+    protected void loadImage(final String artistName, final String albumName,
                              final long albumId, final ImageView imageView, final ImageType imageType) {
-        if (key == null || imageView == null) {
+        if (imageView == null) {
             return;
         }
 
@@ -203,28 +202,6 @@ public class ImageFetcher {
             final Uri artistArtUri = loader.getArtistArtUri(artistName);
             loader.load(artistArtUri, imageView, R.drawable.default_artwork);
         }
-
-        // First, check the memory for the image
-        /**
-         final Bitmap lruBitmap = mImageCache.getBitmapFromMemCache(key);
-         if (lruBitmap != null && imageView != null) {
-         // Bitmap found in memory cache
-         imageView.setImageBitmap(lruBitmap);
-         } else if (executePotentialWork(key, imageView)
-         && imageView != null && !mImageCache.isDiskCachePaused()) {
-         // Otherwise run the worker task
-         final BitmapWorkerTask bitmapWorkerTask = new BitmapWorkerTask(imageView, imageType);
-         final AsyncDrawable asyncDrawable = new AsyncDrawable(mResources, mDefault,
-         bitmapWorkerTask);
-         imageView.setImageDrawable(asyncDrawable);
-         try {
-         ApolloUtils.execute(false, bitmapWorkerTask, key,
-         artistName, albumName, String.valueOf(albumId));
-         } catch (RejectedExecutionException e) {
-         // Executor has exhausted queue space, show default artwork
-         imageView.setImageBitmap(getDefaultArtwork());
-         }
-         }*/
     }
 
     /**
@@ -236,24 +213,4 @@ public class ImageFetcher {
 
 
 
-    /**
-     * Generates key used by album art cache. It needs both album name and artist name
-     * to let to select correct image for the case when there are two albums with the
-     * same artist.
-     *
-     * @param albumName The album name the cache key needs to be generated.
-     * @param artistName The artist name the cache key needs to be generated.
-     * @return
-     */
-    public static String generateAlbumCacheKey(final String albumName, final String artistName) {
-        if (albumName == null || artistName == null) {
-            return null;
-        }
-        return new StringBuilder(albumName)
-                .append("_")
-                .append(artistName)
-                .append("_")
-                .append(Config.ALBUM_ART_SUFFIX)
-                .toString();
-    }
 }

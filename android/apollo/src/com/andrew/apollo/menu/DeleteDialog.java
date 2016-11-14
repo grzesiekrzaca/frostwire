@@ -57,15 +57,13 @@ public class DeleteDialog extends DialogFragment {
     /**
      * @param title The title of the artist, album, or song to delete
      * @param items The item(s) to delete
-     * @param key   The key used to remove items from the cache.
      * @return A new instance of the dialog
      */
-    public static DeleteDialog newInstance(final String title, final long[] items, final String key) {
+    public static DeleteDialog newInstance(final String title, final long[] items) {
         final DeleteDialog frag = new DeleteDialog();
         final Bundle args = new Bundle();
         args.putString(Config.NAME, title);
         args.putLongArray("items", items);
-        args.putString("cachekey", key);
         frag.setArguments(args);
         return frag;
     }
@@ -131,7 +129,6 @@ public class DeleteDialog extends DialogFragment {
         private final DeleteDialog deleteDialog;
         private final AlertDialog.Builder apolloDeleteFilesDialog;
         final Bundle arguments = getArguments();
-        final String key = arguments.getString("cachekey");
 
         public PositiveButtonOnClickListener(DeleteDialog deleteDialog, AlertDialog.Builder apolloDeleteFilesDialog) {
             this.deleteDialog = deleteDialog;
@@ -140,8 +137,6 @@ public class DeleteDialog extends DialogFragment {
 
         @Override
         public void onClick(View view) {
-            // Remove the items from the image cache
-            mFetcher.removeFromCache(key);
             // Delete the selected item(s)
             MusicUtils.deleteTracks(getActivity(), mItemList);
 

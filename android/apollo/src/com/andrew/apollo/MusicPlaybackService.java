@@ -32,6 +32,7 @@ import android.media.MediaPlayer;
 import android.media.RemoteControlClient;
 import android.media.audiofx.AudioEffect;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -872,13 +873,27 @@ public class MusicPlaybackService extends Service {
         }
 
         if (!mAnyActivityInForeground && isPlaying()) {
-            mNotificationHelper.buildNotification(getAlbumName(), getArtistName(),
-                    getTrackName(), getAlbumId(), getAlbumArt(), isPlaying());
+            UpdateNotificationTask updateNotificationTask = new UpdateNotificationTask();
+            updateNotificationTask.execute();
         } else if (mAnyActivityInForeground) {
             mNotificationHelper.killNotification();
             if (!isPlaying()) {
                 updateRemoteControlClient(PLAYSTATE_STOPPED);
             }
+        }
+    }
+
+    private class UpdateNotificationTask extends AsyncTask<Void, Void, Bitmap> {
+        @Override
+        protected Bitmap doInBackground(Void... voids) {
+            return getAlbumArt();
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            mNotificationHelper.buildNotification(getAlbumName(), getArtistName(),
+                    getTrackName(), getAlbumId(), bitmap, isPlaying());
         }
     }
 
@@ -1560,33 +1575,60 @@ public class MusicPlaybackService extends Service {
                 break;
             case META_CHANGED:
             case QUEUE_CHANGED:
-                Bitmap albumArt = getAlbumArt();
-                if (albumArt != null) {
-                    // RemoteControlClient wants to recycle the bitmaps thrown at it, so we need
-                    // to make sure not to hand out our cache copy
-                    Bitmap.Config config = albumArt.getConfig();
-                    if (config == null) {
-                        config = Bitmap.Config.ARGB_8888;
-                    }
-                    albumArt = albumArt.copy(config, false);
-                }
-                mRemoteControlClient
-                        .editMetadata(true)
-                        .putString(MediaMetadataRetriever.METADATA_KEY_ARTIST, getArtistName())
-                        .putString(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST,
-                                getAlbumArtistName())
-                        .putString(MediaMetadataRetriever.METADATA_KEY_ALBUM, getAlbumName())
-                        .putString(MediaMetadataRetriever.METADATA_KEY_TITLE, getTrackName())
-                        .putLong(MediaMetadataRetriever.METADATA_KEY_DURATION, duration())
-                        .putBitmap(RemoteControlClient.MetadataEditor.BITMAP_KEY_ARTWORK, albumArt)
-                        .apply();
-
-                // when Build.VERSION.SDK_INT >= 18;//Build.VERSION_CODES.JELLY_BEAN_MR2;
-                // use mRemoteControlClient.setPlaybackState(playState, position(), 1.0f);
-                mRemoteControlClient.setPlaybackState(playState);
+                QueueChangedTask queueChangedTask = new QueueChangedTask();
+                queueChangedTask.setPlayState(playState);
+                queueChangedTask.execute();
                 break;
         }
     }
+
+    private class QueueChangedTask extends AsyncTask<Void, Void, Bitmap> {
+
+        Integer playState = null;
+
+        public void setPlayState(Integer playState) {
+            this.playState = playState;
+        }
+
+        @Override
+        protected Bitmap doInBackground(Void... voids) {
+            Bitmap albumArt = getAlbumArt();
+            if (albumArt != null) {
+                // RemoteControlClient wants to recycle the bitmaps thrown at it, so we need
+                // to make sure not to hand out our cache copy
+                Bitmap.Config config = albumArt.getConfig();
+                if (config == null) {
+                    config = Bitmap.Config.ARGB_8888;
+                }
+                albumArt = albumArt.copy(config, false);
+            }
+            return  albumArt;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap albumArt) {
+            super.onPostExecute(albumArt);
+            if(playState == null){
+                LOG.error("playState not set for task");
+            }
+
+            mRemoteControlClient
+                    .editMetadata(true)
+                    .putString(MediaMetadataRetriever.METADATA_KEY_ARTIST, getArtistName())
+                    .putString(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST,
+                            getAlbumArtistName())
+                    .putString(MediaMetadataRetriever.METADATA_KEY_ALBUM, getAlbumName())
+                    .putString(MediaMetadataRetriever.METADATA_KEY_TITLE, getTrackName())
+                    .putLong(MediaMetadataRetriever.METADATA_KEY_DURATION, duration())
+                    .putBitmap(RemoteControlClient.MetadataEditor.BITMAP_KEY_ARTWORK, albumArt)
+                    .apply();
+
+            // when Build.VERSION.SDK_INT >= 18;//Build.VERSION_CODES.JELLY_BEAN_MR2;
+            // use mRemoteControlClient.setPlaybackState(playState, position(), 1.0f);
+            mRemoteControlClient.setPlaybackState(playState);
+        }
+    }
+
 
     /**
      * Saves the queue
@@ -2551,8 +2593,7 @@ public class MusicPlaybackService extends Service {
     public Bitmap getAlbumArt() {
         try {
             // Return the cached artwork
-            final Bitmap bitmap = mImageFetcher.getArtwork(getAlbumName(),
-                    getAlbumId(), getArtistName());
+            final Bitmap bitmap = mImageFetcher.getAlbumImage(getAlbumId());
             return bitmap;
         } catch (Throwable e) {
             e.printStackTrace();

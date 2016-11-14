@@ -25,6 +25,7 @@ import com.andrew.apollo.utils.ApolloUtils;
 import com.andrew.apollo.utils.BitmapUtils;
 import com.andrew.apollo.utils.MusicUtils;
 import com.frostwire.android.R;
+import com.frostwire.android.util.ImageLoader;
 
 /**
  * @author Andrew Neal (andrewdneal@gmail.com)
@@ -104,31 +105,8 @@ public class CarouselTab extends FrameLayoutWithOverlay {
      */
     public void blurPhoto(final Activity context, final String artist,
             final String album) {
-        //FIXME: this should go into an AsyncTask
-        //todo move to transformations
-
-
-        // First check for the artist image
-        Bitmap artistImage = mFetcher.getCachedBitmap(artist);
-        // Second check for cached artwork
-//        if (artistImage == null) {
-//            artistImage = mFetcher.getCachedArtwork(album, artist);
-//        }
-        // If all else, use the default image
-        if (artistImage == null) {
-            artistImage = BitmapFactory.decodeResource(getResources(), R.drawable.theme_preview);
-        }
-
-        // Gubatron: this can fail on some devices with an internal NPE
-        // trying to copy the bitmap right to do the effect. let's protect it
-        if (artistImage != null) {
-            try {
-                final Bitmap blur = BitmapUtils.createBlurredBitmap(artistImage);
-                mPhoto.setImageBitmap(blur);
-            } catch (Throwable t) {
-                //don't blur if you can't.
-            }
-        }
+        final ImageLoader loader = ImageLoader.getInstance(context.getApplicationContext());
+        loader.loadAndBlurWithAlternative(ImageLoader.getArtistArtUri(artist),ImageLoader.getAlbumArtUri(MusicUtils.getIdForAlbum(context, album, artist)),mPhoto);
     }
 
     /**
@@ -156,7 +134,6 @@ public class CarouselTab extends FrameLayoutWithOverlay {
      */
     public void fetchAlbumPhoto(final Activity context, final String album, final String artist) {
         if (!TextUtils.isEmpty(album)) {
-            mFetcher.removeFromCache(ImageFetcher.generateAlbumCacheKey(album, artist));
             mFetcher.loadAlbumImage(artist, album, -1, mAlbumArt);
         } else {
             setDefault(context);
@@ -198,16 +175,16 @@ public class CarouselTab extends FrameLayoutWithOverlay {
      */
     public void setPlaylistOrGenrePhoto(final Activity context,
             final String profileName) {
-        if (!TextUtils.isEmpty(profileName)) {
-            final Bitmap image = mFetcher.getCachedBitmap(profileName);
-            if (image != null) {
-                mPhoto.setImageBitmap(image);
-            } else {
-                setDefault(context);
-            }
-        } else {
-            setDefault(context);
-        }
+//        if (!TextUtils.isEmpty(profileName)) {
+//            final Bitmap image = mFetcher.getCachedBitmap(profileName);
+//            if (image != null) {
+//                mPhoto.setImageBitmap(image);
+//            } else {
+//                setDefault(context);
+//            }
+//        } else {
+//            setDefault(context);
+//        }
     }
 
     /**
