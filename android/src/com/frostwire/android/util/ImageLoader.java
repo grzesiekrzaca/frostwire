@@ -146,6 +146,7 @@ public final class ImageLoader {
                 memoryCache(cache).executor(Engine.instance().getThreadPool()).build();
 
         picasso.setIndicatorsEnabled(false);
+        picasso.setIndicatorsEnabled(true);
     }
 
     public void load(Uri uri, ImageView target) {
@@ -219,8 +220,8 @@ public final class ImageLoader {
             if (data == null || data.uri == null) {
                 return false;
             }
-
-            return SCHEME_IMAGE.equals(data.uri.getScheme());
+            return false;
+//            return SCHEME_IMAGE.equals(data.uri.getScheme());
         }
 
         @Override

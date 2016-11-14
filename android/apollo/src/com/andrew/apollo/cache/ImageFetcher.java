@@ -49,16 +49,6 @@ public class ImageFetcher {
     private final Resources mResources;
 
     /**
-     * First layer of the transition drawable
-     */
-    private final ColorDrawable mCurrentDrawable;
-
-    /**
-     * Layer drawable used to cross fade the result from the worker
-     */
-    private final Drawable[] mArrayDrawable;
-
-    /**
      * Default album art
      */
     private final Bitmap mDefault;
@@ -87,12 +77,6 @@ public class ImageFetcher {
         // No filter and no dither makes things much quicker
         mDefaultArtwork.setFilterBitmap(false);
         mDefaultArtwork.setDither(false);
-        // Create the transparent layer for the transition drawable
-        mCurrentDrawable = new ColorDrawable(mResources.getColor(R.color.transparent));
-        // A transparent image (layer 0) and the new result (layer 1)
-        mArrayDrawable = new Drawable[2];
-        mArrayDrawable[0] = mCurrentDrawable;
-        // XXX The second layer is set in the worker task.
     }
 
     /**

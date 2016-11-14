@@ -609,6 +609,12 @@ public abstract class ApolloFragment<T extends ApolloFragmentAdapter<I>, I>
         initAbsListView(mListView);
     }
 
+    final VerticalScrollListener.ScrollableHeader mScrollableHeader = new VerticalScrollListener.ScrollableHeader() {
+        @Override
+        public void onScrollStateChanged(final AbsListView view, final int scrollState) {
+            // Do nothing
+        }
+    };
 
     /**
      * @return The position of an item in the list or grid based on the id of
