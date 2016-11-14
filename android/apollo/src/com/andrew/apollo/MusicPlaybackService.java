@@ -46,7 +46,6 @@ import android.provider.MediaStore.Audio.AlbumColumns;
 import android.provider.MediaStore.Audio.AudioColumns;
 import android.support.v4.content.ContextCompat;
 
-import com.andrew.apollo.cache.ImageCache;
 import com.andrew.apollo.cache.ImageFetcher;
 import com.andrew.apollo.provider.FavoritesStore;
 import com.andrew.apollo.provider.RecentStore;
@@ -562,8 +561,6 @@ public class MusicPlaybackService extends Service {
 
         // Initialize the image fetcher
         mImageFetcher = ImageFetcher.getInstance(this);
-        // Initialize the image cache
-        mImageFetcher.setImageCache(ImageCache.getInstance(this));
 
         // Start up the thread running the service. Note that we create a
         // separate thread because the service normally runs in the process's

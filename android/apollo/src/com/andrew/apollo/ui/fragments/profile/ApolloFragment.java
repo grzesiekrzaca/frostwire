@@ -492,14 +492,6 @@ public abstract class ApolloFragment<T extends ApolloFragmentAdapter<I>, I>
         }
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (mAdapter != null) {
-            mAdapter.flush();
-        }
-    }
-
     public void restartLoader() {
         restartLoader(false);
     }
@@ -616,20 +608,10 @@ public abstract class ApolloFragment<T extends ApolloFragmentAdapter<I>, I>
         initAbsListView(mListView);
     }
 
-    /**
-     * Pause disk cache access to ensure smoother scrolling
-     */
     final VerticalScrollListener.ScrollableHeader mScrollableHeader = new VerticalScrollListener.ScrollableHeader() {
         @Override
         public void onScrollStateChanged(final AbsListView view, final int scrollState) {
-            // Pause disk cache access to ensure smoother scrolling
-            if (mAdapter == null) {
-                return;
-            }
-            mAdapter.setPauseDiskCache(
-                    scrollState == AbsListView.OnScrollListener.SCROLL_STATE_FLING ||
-                    scrollState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL);
-
+            // Do nothing
         }
     };
 

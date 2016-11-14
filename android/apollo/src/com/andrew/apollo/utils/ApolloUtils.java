@@ -26,7 +26,6 @@ import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.Toast;
 import com.andrew.apollo.Config;
-import com.andrew.apollo.cache.ImageCache;
 import com.andrew.apollo.cache.ImageFetcher;
 import com.frostwire.android.gui.services.Engine;
 import com.andrew.apollo.ui.activities.ShortcutActivity;
@@ -128,14 +127,13 @@ public final class ApolloUtils {
     }
 
     /**
-     * Creates a new instance of the {@link ImageCache} and {@link ImageFetcher}
+     * Creates a new instance of the and {@link ImageFetcher}
      *
      * @param activity The {@link Activity} to use.
      * @return A new {@link ImageFetcher} used to fetch images asynchronously.
      */
     public static final ImageFetcher getImageFetcher(final Activity activity) {
         final ImageFetcher imageFetcher = ImageFetcher.getInstance(activity);
-        imageFetcher.setImageCache(ImageCache.findOrCreateCache(activity));
         return imageFetcher;
     }
 

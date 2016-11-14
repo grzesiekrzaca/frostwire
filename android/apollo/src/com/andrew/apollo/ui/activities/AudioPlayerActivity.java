@@ -552,7 +552,6 @@ public class AudioPlayerActivity extends FragmentActivity implements
     protected void onStop() {
         super.onStop();
         MusicUtils.notifyForegroundStateChanged(this, false);
-        mImageFetcher.flush();
     }
 
     /**

@@ -157,15 +157,6 @@ public class AlbumAdapter extends ApolloFragmentAdapter<Album> implements Apollo
     }
 
     /**
-     * @param pause True to temporarily pause the disk cache, false otherwise.
-     */
-    public void setPauseDiskCache(final boolean pause) {
-        if (mImageFetcher != null) {
-            mImageFetcher.setPauseDiskCache(pause);
-        }
-    }
-
-    /**
      * @param extra True to load line three and the background image, false
      *              otherwise.
      */

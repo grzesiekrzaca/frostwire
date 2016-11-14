@@ -230,15 +230,6 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
      * {@inheritDoc}
      */
     @Override
-    protected void onPause() {
-        super.onPause();
-        mImageFetcher.flush();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public int setContentView() {
         return R.layout.activity_profile_base;
     }
@@ -562,6 +553,9 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
 
                         cursor.close();
 
+                        //todo fixme - use image fetcher and change Media store entry or add persistent alternate image info (pending UC analyses)
+
+
                         String key = mProfileName;
                         if (isArtist()) {
                             key = mArtistName;
@@ -569,13 +563,13 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
                             key = ImageFetcher.generateAlbumCacheKey(mProfileName, mArtistName);
                         }
 
-                        final Bitmap bitmap = ImageFetcher.decodeSampledBitmapFromFile(picturePath);
-                        mImageFetcher.addBitmapToCache(key, bitmap);
-                        if (isAlbum()) {
-                            mTabCarousel.getAlbumArt().setImageBitmap(bitmap);
-                        } else {
-                            mTabCarousel.getPhoto().setImageBitmap(bitmap);
-                        }
+//                        final Bitmap bitmap = ImageFetcher.decodeSampledBitmapFromFile(picturePath);
+//                        mImageFetcher.addBitmapToCache(key, bitmap);
+//                        if (isAlbum()) {
+//                            mTabCarousel.getAlbumArt().setImageBitmap(bitmap);
+//                        } else {
+//                            mTabCarousel.getPhoto().setImageBitmap(bitmap);
+//                        }
                     }
                 } catch (Throwable t) {
                     // it seems to be complaining about not having the '_data' column.

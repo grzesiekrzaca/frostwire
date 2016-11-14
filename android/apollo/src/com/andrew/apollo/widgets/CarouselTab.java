@@ -105,13 +105,15 @@ public class CarouselTab extends FrameLayoutWithOverlay {
     public void blurPhoto(final Activity context, final String artist,
             final String album) {
         //FIXME: this should go into an AsyncTask
+        //todo move to transformations
+
 
         // First check for the artist image
         Bitmap artistImage = mFetcher.getCachedBitmap(artist);
         // Second check for cached artwork
-        if (artistImage == null) {
-            artistImage = mFetcher.getCachedArtwork(album, artist);
-        }
+//        if (artistImage == null) {
+//            artistImage = mFetcher.getCachedArtwork(album, artist);
+//        }
         // If all else, use the default image
         if (artistImage == null) {
             artistImage = BitmapFactory.decodeResource(getResources(), R.drawable.theme_preview);
