@@ -102,12 +102,6 @@ public abstract class ApolloFragmentAdapter<I> extends ArrayAdapter<I> {
         clear();
     }
 
-    public void flush() {
-        if (mImageFetcher != null) {
-            mImageFetcher.flush();
-        }
-    }
-
     /**
      * @param data The {@link List} used to return the count for the adapter.
      */
@@ -167,15 +161,6 @@ public abstract class ApolloFragmentAdapter<I> extends ArrayAdapter<I> {
             convertView.setTag(holder);
         }
         return convertView;
-    }
-
-    /**
-     * @param pause True to temporarily pause the disk cache, false otherwise.
-     */
-    public void setPauseDiskCache(final boolean pause) {
-        if (mImageFetcher != null) {
-            mImageFetcher.setPauseDiskCache(pause);
-        }
     }
 
     /**

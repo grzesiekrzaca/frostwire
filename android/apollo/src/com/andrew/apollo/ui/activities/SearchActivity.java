@@ -57,7 +57,7 @@ import static com.andrew.apollo.utils.MusicUtils.musicPlaybackService;
  * @author Andrew Neal (andrewdneal@gmail.com)
  */
 public class SearchActivity extends Activity implements LoaderCallbacks<Cursor>,
-        OnScrollListener, OnQueryTextListener, OnItemClickListener, ServiceConnection {
+         OnQueryTextListener, OnItemClickListener, ServiceConnection {
     /**
      * Grid view column count. ONE - list, TWO - normal grid
      */
@@ -145,8 +145,7 @@ public class SearchActivity extends Activity implements LoaderCallbacks<Cursor>,
         mGridView.setAdapter(mAdapter);
         // Recycle the data
         mGridView.setRecyclerListener(new RecycleHolder());
-        // Speed up scrolling
-        mGridView.setOnScrollListener(this);
+
         mGridView.setOnItemClickListener(this);
         if (ApolloUtils.isLandscape(this)) {
             mGridView.setNumColumns(TWO);
@@ -280,20 +279,6 @@ public class SearchActivity extends Activity implements LoaderCallbacks<Cursor>,
         mAdapter.swapCursor(null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onScrollStateChanged(final AbsListView view, final int scrollState) {
-        // Pause disk cache access to ensure smoother scrolling
-        if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_FLING
-                || scrollState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
-            mAdapter.setPauseDiskCache(true);
-        } else {
-            mAdapter.setPauseDiskCache(false);
-            mAdapter.notifyDataSetChanged();
-        }
-    }
 
     /**
      * {@inheritDoc}
@@ -544,15 +529,6 @@ public class SearchActivity extends Activity implements LoaderCallbacks<Cursor>,
             return VIEW_TYPE_COUNT;
         }
 
-        /**
-         * @param pause True to temporarily pause the disk cache, false
-         *            otherwise.
-         */
-        public void setPauseDiskCache(final boolean pause) {
-            if (mImageFetcher != null) {
-                mImageFetcher.setPauseDiskCache(pause);
-            }
-        }
 
         /**
          * @param prefix The query to filter.
@@ -566,13 +542,5 @@ public class SearchActivity extends Activity implements LoaderCallbacks<Cursor>,
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onScroll(final AbsListView view, final int firstVisibleItem,
-            final int visibleItemCount, final int totalItemCount) {
-        // Nothing to do
-    }
 
 }

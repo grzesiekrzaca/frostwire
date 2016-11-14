@@ -20,7 +20,6 @@ package com.frostwire.android.gui;
 
 import android.app.Application;
 import android.view.ViewConfiguration;
-import com.andrew.apollo.cache.ImageCache;
 import com.frostwire.android.AndroidPlatform;
 import com.frostwire.android.core.ConfigurationManager;
 import com.frostwire.android.core.Constants;
@@ -85,7 +84,6 @@ public class MainApplication extends Application {
 
     @Override
     public void onLowMemory() {
-        ImageCache.getInstance(this).evictAll();
         ImageLoader.getInstance(this).clear();
         super.onLowMemory();
     }
