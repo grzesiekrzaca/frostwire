@@ -16,6 +16,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.util.Log;
 import android.widget.ImageView;
 import com.andrew.apollo.utils.MusicUtils;
 import com.andrew.apollo.utils.ThemeUtils;
@@ -51,7 +52,8 @@ public final class ImageFetcher {
      */
     private ImageFetcher(final Context context) {
         mLoader = ImageLoader.getInstance(context.getApplicationContext());
-        mUriChanger = new DbUriChanger(context.getApplicationContext());
+        mUriChanger = new CachedDbUriChanger(context.getApplicationContext());
+//        mUriChanger = new SimpleUriChanger();
         Resources mResources = context.getResources();
         // Create the default artwork
         final ThemeUtils theme = new ThemeUtils(context);

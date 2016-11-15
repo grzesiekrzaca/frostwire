@@ -30,6 +30,7 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.andrew.apollo.utils.BitmapUtils;
@@ -209,7 +210,12 @@ public final class ImageLoader {
 
     void load(Uri uri, ImageView target, int placeholderResId) {
         if (!shutdown) {
-            picasso.load(uri).noFade().placeholder(placeholderResId).into(target);
+            picasso.load(uri).noFade()
+                    .placeholder(placeholderResId)
+                    .resize(1024,0)
+                    .resize(0,1024)
+                    .onlyScaleDown()
+                    .into(target);
         }
     }
 
@@ -256,8 +262,7 @@ public final class ImageLoader {
             if (data == null || data.uri == null) {
                 return false;
             }
-            return false;
-//            return SCHEME_IMAGE.equals(data.uri.getScheme());
+            return SCHEME_IMAGE.equals(data.uri.getScheme());
         }
 
         @Override

@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -529,7 +530,6 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
         if (requestCode == NEW_PHOTO) {
             if (resultCode == RESULT_OK) {
                 Uri selectedImage = data.getData();
-
                 if (selectedImage.toString().startsWith("content://com.android.providers.media.documents/document/image%3A")) {
                     selectedImage = Uri.parse(selectedImage.toString().replace("com.android.providers.media.documents/document/image%3A","media/external/images/media/"));
                 }

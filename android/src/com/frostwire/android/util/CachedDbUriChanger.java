@@ -6,22 +6,32 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
+import android.util.Log;
 
 import com.frostwire.util.Logger;
 import com.frostwire.util.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Used to change Uri of a request to custom Uri set by the user to facilitate custom image logic
  */
 
-public class DbUriChanger implements UriChanger{
+public class CachedDbUriChanger implements UriChanger{
 
-    private static final Logger LOG = Logger.getLogger(DbUriChanger.class);
+    private static final Logger LOG = Logger.getLogger(CachedDbUriChanger.class);
 
     private final AlternateUriStore mAlternateUriStore;
 
-    public DbUriChanger(Context context){
+    /**
+     * As to not read from the database (relatively costly operation)
+     */
+    private HashMap<String, String> cache = new HashMap<>();
+
+    public CachedDbUriChanger(Context context){
         mAlternateUriStore = new AlternateUriStore(context);
+        mAlternateUriStore.populateCache(cache);
     }
 
     public Uri changeIfNeeded(Uri uri) {
@@ -30,16 +40,23 @@ public class DbUriChanger implements UriChanger{
     }
 
     private Uri getAlternateUri(Uri uri) {
-        return mAlternateUriStore.getAlternateUri(uri);
+        String uriString = cache.get(uri.toString());
+        return StringUtils.isNullOrEmpty(uriString)?uri:Uri.parse(uriString);
     }
 
     @Override
     public void setChangeBehaviour(Uri baseUri, Uri alternateUri) {
+        if (StringUtils.isNullOrEmpty(baseUri.toString()) || StringUtils.isNullOrEmpty(alternateUri.toString()) ) {
+            LOG.warn("Invalid uri association");
+            return;
+        }
+        cache.put(baseUri.toString(),alternateUri.toString());
         mAlternateUriStore.associate(baseUri.toString(),alternateUri.toString());
     }
 
     @Override
     public void removeChangeBehaviour(Uri baseUri) {
+        cache.remove(baseUri.toString());
         mAlternateUriStore.disassociate(baseUri.toString());
     }
 
@@ -63,32 +80,25 @@ public class DbUriChanger implements UriChanger{
                 BASE_URI_COLUMN_NAME, ALTERNATE_URI_COLUMN_NAME
         };
 
-        /**
-         * Where clause when querying the db
-         */
-        private final String SELECTION = BASE_URI_COLUMN_NAME + "=?";
-
         AlternateUriStore(final Context context) {
             super(context, DATABASE_NAME, null, VERSION);
         }
 
         @Override
         public void onCreate(final SQLiteDatabase db) {
+            LOG.warn("Creating");
             db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (" + BASE_URI_COLUMN_NAME
                     + " TEXT PRIMARY KEY NOT NULL," + ALTERNATE_URI_COLUMN_NAME + " TEXT NOT NULL);");
         }
 
         @Override
         public void onUpgrade(final SQLiteDatabase db, final int oldVersion, final int newVersion) {
+            LOG.warn("Update");
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
             onCreate(db);
         }
 
         void associate(final String baseUri, final String alternateUri) {
-            if (StringUtils.isNullOrEmpty(baseUri) || StringUtils.isNullOrEmpty(alternateUri) ) {
-                LOG.warn("Invalid uri association");
-                return;
-            }
             final SQLiteDatabase database = getWritableDatabase();
             final ContentValues values = new ContentValues(2);
             values.put(BASE_URI_COLUMN_NAME, baseUri);
@@ -103,37 +113,25 @@ public class DbUriChanger implements UriChanger{
             database.setTransactionSuccessful();
 
             database.endTransaction();
-
         }
 
-        Uri getAlternateUri(final Uri baseUri) {
-            String baseUriString = baseUri.toString();
-            if (StringUtils.isNullOrEmpty(baseUriString)) {
-                return null;
-            }
-
+        void populateCache(Map<String, String> map){
             try {
                 final SQLiteDatabase database = getReadableDatabase();
 
-                final String[] is = new String[]{
-                        baseUriString
-                };
-                Cursor cursor = database.query(TABLE_NAME, PROJECTION, SELECTION, is, null,
+                Cursor cursor = database.query(TABLE_NAME, PROJECTION, null, null, null,
                         null, null, null);
-                if (cursor != null && cursor.moveToFirst()) {
-                    final String uri = cursor.getString(cursor.getColumnIndexOrThrow(ALTERNATE_URI_COLUMN_NAME));
-                    cursor.close();
-
-                    return Uri.parse(uri);
-                }
                 if (cursor != null) {
+                    while(cursor.moveToNext()){
+                        final String alternateUri = cursor.getString(cursor.getColumnIndexOrThrow(ALTERNATE_URI_COLUMN_NAME));
+                        final String baseUri = cursor.getString(cursor.getColumnIndexOrThrow(BASE_URI_COLUMN_NAME));
+                        map.put(baseUri,alternateUri);
+                    }
                     cursor.close();
                 }
             } catch (Throwable e) {
                 LOG.error("Database read problem");
-                return null;
             }
-            return null;
         }
 
         /**
