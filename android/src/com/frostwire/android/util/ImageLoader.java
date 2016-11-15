@@ -152,10 +152,11 @@ public final class ImageLoader {
         long diskSize = SystemUtils.calculateDiskCacheSize(directory, MIN_DISK_CACHE_SIZE, MAX_DISK_CACHE_SIZE);
         int memSize = SystemUtils.calculateMemoryCacheSize(context);
 
+
+
         this.cache = new ImageCache(directory, diskSize, memSize);
         this.picasso = new Builder(context).addRequestHandler(new ImageRequestHandler(context.getApplicationContext())).
                 memoryCache(cache).executor(Engine.instance().getThreadPool()).build();
-
         picasso.setIndicatorsEnabled(false);
         picasso.setIndicatorsEnabled(true);
     }
@@ -179,6 +180,7 @@ public final class ImageLoader {
     }
 
     void loadAndBlurWithAlternative(Uri primaryUri, final Uri secondaryUri, final ImageView mPhoto) {
+        LOG.warn("cache mem max: "+cache.maxSize() + " mem:" + cache.size() );
         picasso.load(primaryUri).fit().transform(blur).into(mPhoto, new Callback.EmptyCallback() {
             @Override
             public void onError() {
@@ -212,11 +214,12 @@ public final class ImageLoader {
         if (!shutdown) {
             picasso.load(uri).noFade()
                     .placeholder(placeholderResId)
-                    .resize(1024,0)
-                    .resize(0,1024)
+                    .resize(1024,1024)
                     .onlyScaleDown()
+                    .centerCrop()
                     .into(target);
         }
+        LOG.debug(picasso.getSnapshot().toString());
     }
 
     void load(Uri uri, ImageView target, int targetWidth, int targetHeight, int placeholderResId) {
