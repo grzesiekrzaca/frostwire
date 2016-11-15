@@ -190,13 +190,13 @@ public final class ImageLoader {
         picasso.load(uri).noFade().into(target);
     }
 
-    public void load(Uri uri, ImageView target, int targetWidth, int targetHeight) {
+    void load(Uri uri, ImageView target, int targetWidth, int targetHeight) {
         if (!shutdown) {
             picasso.load(uri).noFade().resize(targetWidth, targetHeight).into(target);
         }
     }
 
-    public void load(final Uri uri, final Uri uriRetry, final ImageView target, final int targetWidth, final int targetHeight) {
+    void load(final Uri uri, final Uri uriRetry, final ImageView target, final int targetWidth, final int targetHeight) {
         if (!shutdown) {
             picasso.load(uri).noFade().resize(targetWidth, targetHeight).into(target, new Callback.EmptyCallback() {
                 @Override
@@ -256,7 +256,8 @@ public final class ImageLoader {
             if (data == null || data.uri == null) {
                 return false;
             }
-            return SCHEME_IMAGE.equals(data.uri.getScheme());
+            return false;
+//            return SCHEME_IMAGE.equals(data.uri.getScheme());
         }
 
         @Override

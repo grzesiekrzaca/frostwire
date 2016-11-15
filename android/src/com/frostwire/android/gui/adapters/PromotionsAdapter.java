@@ -37,6 +37,7 @@ import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.AbstractAdapter;
 import com.frostwire.android.offers.Offers;
 import com.frostwire.android.offers.PlayStore;
+import com.frostwire.android.util.ImageFetcher;
 import com.frostwire.android.util.ImageLoader;
 import com.frostwire.frostclick.Slide;
 import com.frostwire.util.Logger;
@@ -57,14 +58,14 @@ public class PromotionsAdapter extends AbstractAdapter<Slide> {
     private static final int NO_SPECIAL_OFFER = 97999605;
     private final List<Slide> slides;
     private final PromotionDownloader promotionDownloader;
-    private final ImageLoader imageLoader;
+    private final ImageFetcher imageFetcher;
     private int specialOfferLayout;
     private static final double PROMO_HEIGHT_TO_WIDTH_RATIO = 0.52998;
 
     public PromotionsAdapter(Context ctx, List<Slide> slides, PromotionDownloader promotionDownloader) {
         super(ctx, R.layout.view_promotions_item);
         this.slides = slides;
-        this.imageLoader = ImageLoader.getInstance(ctx);
+        this.imageFetcher = ImageFetcher.getInstance(ctx);
         this.promotionDownloader = promotionDownloader;
     }
 
@@ -79,7 +80,7 @@ public class PromotionsAdapter extends AbstractAdapter<Slide> {
         int promoWidth = gridView.getColumnWidth();
         int promoHeight = (int) (promoWidth * PROMO_HEIGHT_TO_WIDTH_RATIO);
         if (promoWidth > 0 && promoHeight > 0 && imageView != null) {
-            imageLoader.load(Uri.parse(viewItem.imageSrc), imageView, promoWidth, promoHeight);
+            imageFetcher.load(Uri.parse(viewItem.imageSrc), imageView, promoWidth, promoHeight);
         }
 
         final Slide theSlide = viewItem;

@@ -97,6 +97,11 @@ public final class ImageFetcher {
         mLoader.load(mUriChanger.changeIfNeeded(albumArtUri), imageView, width, height, placeholderResId);
     }
 
+    public void loadAlbumImageAndResizeOrTryAlternative(final long albumId, final Uri uriRetry, ImageView target, int targetWidth, int targetHeight) {
+        final Uri albumArtUri = ImageLoader.getAlbumArtUri(albumId);
+        mLoader.load(mUriChanger.changeIfNeeded(albumArtUri), uriRetry, target, targetWidth, targetHeight);
+    }
+
     /**
      * Used to fetch the current artwork.
      */
