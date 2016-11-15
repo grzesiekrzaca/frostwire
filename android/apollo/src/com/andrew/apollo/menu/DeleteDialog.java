@@ -21,7 +21,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.andrew.apollo.Config;
-import com.andrew.apollo.cache.ImageFetcher;
+import com.frostwire.android.util.ImageFetcher;
 import com.andrew.apollo.utils.ApolloUtils;
 import com.andrew.apollo.utils.MusicUtils;
 import com.frostwire.android.R;

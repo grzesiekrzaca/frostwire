@@ -105,8 +105,8 @@ public class ArtistAlbumAdapter extends ApolloFragmentAdapter<Album> {
 
         if (mImageFetcher != null && Ref.alive(holder.mImage)) {
             // Asynchronously load the album images into the adapter
-            mImageFetcher.loadAlbumImage(album.mArtistName,
-                    albumName, album.mAlbumId,
+            mImageFetcher.loadAlbumImage(
+                    album.mAlbumId,
                     holder.mImage.get());
         }
 

@@ -30,6 +30,7 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.andrew.apollo.utils.BitmapUtils;
@@ -142,8 +143,8 @@ public final class ImageLoader {
         return Uri.withAppendedPath(ImageLoader.METADATA_THUMBNAILS_URI, Uri.encode(uri.toString()));
     }
 
-    public static Uri getPlaylistArtUri(String playlistName) {
-        return Uri.withAppendedPath(ImageLoader.ARTIST_THUMBNAILS_URI, playlistName);
+    static Uri getPlaylistArtUri(String playlistName) {
+        return Uri.withAppendedPath(ImageLoader.PLAYLIST_THUMBNAILS_URI, playlistName);
     }
 
     private ImageLoader(Context context) {
@@ -151,10 +152,11 @@ public final class ImageLoader {
         long diskSize = SystemUtils.calculateDiskCacheSize(directory, MIN_DISK_CACHE_SIZE, MAX_DISK_CACHE_SIZE);
         int memSize = SystemUtils.calculateMemoryCacheSize(context);
 
+
+
         this.cache = new ImageCache(directory, diskSize, memSize);
         this.picasso = new Builder(context).addRequestHandler(new ImageRequestHandler(context.getApplicationContext())).
                 memoryCache(cache).executor(Engine.instance().getThreadPool()).build();
-
         picasso.setIndicatorsEnabled(false);
         picasso.setIndicatorsEnabled(true);
     }
@@ -173,11 +175,12 @@ public final class ImageLoader {
         }
     };
 
-    public void loadAndBlur(Uri uri, ImageView mPhoto) {
+    void loadAndBlur(Uri uri, ImageView mPhoto) {
             picasso.load(uri).fit().transform(blur).into(mPhoto);
     }
 
-    public void loadAndBlurWithAlternative(Uri primaryUri, final Uri secondaryUri, final ImageView mPhoto) {
+    void loadAndBlurWithAlternative(Uri primaryUri, final Uri secondaryUri, final ImageView mPhoto) {
+        LOG.warn("cache mem max: "+cache.maxSize() + " mem:" + cache.size() );
         picasso.load(primaryUri).fit().transform(blur).into(mPhoto, new Callback.EmptyCallback() {
             @Override
             public void onError() {
@@ -186,17 +189,17 @@ public final class ImageLoader {
         });
     }
 
-    public void load(Uri uri, ImageView target) {
+    void load(Uri uri, ImageView target) {
         picasso.load(uri).noFade().into(target);
     }
 
-    public void load(Uri uri, ImageView target, int targetWidth, int targetHeight) {
+    void load(Uri uri, ImageView target, int targetWidth, int targetHeight) {
         if (!shutdown) {
             picasso.load(uri).noFade().resize(targetWidth, targetHeight).into(target);
         }
     }
 
-    public void load(final Uri uri, final Uri uriRetry, final ImageView target, final int targetWidth, final int targetHeight) {
+    void load(final Uri uri, final Uri uriRetry, final ImageView target, final int targetWidth, final int targetHeight) {
         if (!shutdown) {
             picasso.load(uri).noFade().resize(targetWidth, targetHeight).into(target, new Callback.EmptyCallback() {
                 @Override
@@ -207,25 +210,26 @@ public final class ImageLoader {
         }
     }
 
-    public void load(Uri uri, ImageView target, int placeholderResId) {
+    void load(Uri uri, ImageView target, int placeholderResId) {
         if (!shutdown) {
-            picasso.load(uri).noFade().placeholder(placeholderResId).into(target);
+            picasso.load(uri).noFade()
+                    .placeholder(placeholderResId)
+                    .resize(1024,1024)
+                    .onlyScaleDown()
+                    .centerCrop()
+                    .into(target);
         }
+        LOG.debug(picasso.getSnapshot().toString());
     }
 
-    public void load(Uri uri, ImageView target, int targetWidth, int targetHeight, int placeholderResId) {
+    void load(Uri uri, ImageView target, int targetWidth, int targetHeight, int placeholderResId) {
         if (!shutdown) {
             picasso.load(uri).noFade().resize(targetWidth, targetHeight).placeholder(placeholderResId).into(target);
         }
     }
 
-    public void load(Uri uri, Target target) {
-        if (!shutdown) {
-            picasso.load(uri).into(target);
-        }
-    }
 
-    public Bitmap get(Uri uri) {
+    Bitmap get(Uri uri) {
         try {
             return picasso.load(uri).get();
         } catch (IOException e) {
@@ -240,6 +244,10 @@ public final class ImageLoader {
     public void shutdown() {
         shutdown = true;
         picasso.shutdown();
+    }
+
+    public void invalidate(Uri uri) {
+        picasso.invalidate(uri);
     }
 
     private static final class ImageRequestHandler extends RequestHandler {

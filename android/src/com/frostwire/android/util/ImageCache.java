@@ -29,6 +29,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.os.Looper;
+import android.util.Log;
 
 import com.frostwire.android.util.DiskCache.Entry;
 import com.squareup.picasso.Cache;
@@ -42,29 +43,41 @@ import com.squareup.picasso.LruCache;
 final class ImageCache implements Cache {
 
     private final DiskCache disk;
-    private final LruCache mem;
+    private final TestLruCache mem;
+
 
     public ImageCache(File directory, long diskSize, int memSize) {
         this.disk = createDiskCache(directory, diskSize);
-        this.mem = new LruCache(memSize);
+        this.mem = new TestLruCache(memSize);
     }
 
     @Override
-    public Bitmap get(String key) {
+    public synchronized Bitmap get(String key) {
         Bitmap bmp = mem.get(key);
+        Log.d("ImageCache",dump());
 
+        if (bmp != null) {
+            Log.w("ImageCache","got from memory "+key);
+        }
         if (bmp == null && !isMain()) {
             bmp = diskGet(key);
+            if (bmp != null) {
+                Log.e("ImageCache","got from disk "+key);
+            }
         }
-
         return bmp;
     }
 
     @Override
-    public void set(String key, Bitmap bitmap) {
+    public synchronized void set(String key, Bitmap bitmap) {
+        Log.d("ImageCache", "putting "+key);
         mem.set(key, bitmap);
-
+        Log.d("ImageCache","hit "+mem.hitCount()+" miss "+mem.missCount()+" eviction "+mem.evictionCount()+" put "+mem.putCount());
         diskPut(key, bitmap);
+    }
+
+    public String dump(){
+       return mem.dump();
     }
 
     @Override
@@ -80,11 +93,13 @@ final class ImageCache implements Cache {
     @Override
     public void clear() {
         mem.clear();
+        Log.d("ImageCache", "clear memory");
     }
 
     @Override
     public void clearKeyUri(String keyPrefix) {
         mem.clearKeyUri(keyPrefix);
+        Log.d("ImageCache", "clear mem keyprefix "+keyPrefix);
     }
 
     private InputStream getInputStream(Bitmap bmp) {

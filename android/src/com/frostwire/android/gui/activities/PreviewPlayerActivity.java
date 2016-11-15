@@ -41,6 +41,7 @@ import com.frostwire.android.gui.dialogs.YouTubeDownloadDialog;
 import com.frostwire.android.gui.services.Engine;
 import com.frostwire.android.gui.views.AbstractActivity;
 import com.frostwire.android.gui.views.AbstractDialog;
+import com.frostwire.android.util.ImageFetcher;
 import com.frostwire.android.util.ImageLoader;
 import com.frostwire.util.Logger;
 import com.frostwire.search.FileSearchResult;
@@ -154,7 +155,7 @@ public final class PreviewPlayerActivity extends AbstractActivity implements
         }
 
         if (thumbnailUrl != null) {
-            ImageLoader.getInstance(this).load(Uri.parse(thumbnailUrl), img, R.drawable.default_artwork);
+            ImageFetcher.getInstance(this).load(Uri.parse(thumbnailUrl), img, R.drawable.default_artwork);
         }
 
         final ImageButton downloadButton = findView(R.id.activity_preview_player_download_button);

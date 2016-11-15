@@ -18,10 +18,8 @@
 
 package com.frostwire.android.gui.views;
 
-import android.content.ContentUris;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,7 +29,7 @@ import android.widget.TextView;
 import com.frostwire.android.R;
 import com.frostwire.android.core.FileDescriptor;
 import com.frostwire.android.gui.services.Engine;
-import com.frostwire.android.util.ImageLoader;
+import com.frostwire.android.util.ImageFetcher;
 
 /**
  * @author gubatron
@@ -103,8 +101,7 @@ public class PlayerMenuItemView extends LinearLayout {
     }
 
     private void setArtwork(FileDescriptor fd) {
-        Uri uri = ContentUris.withAppendedId(ImageLoader.ALBUM_THUMBNAILS_URI, fd.albumId);
-        ImageLoader.getInstance(getContext()).load(uri, imageThumbnail, 96, 96, R.drawable.artwork_default_micro_kind);
+        ImageFetcher.getInstance(getContext()).loadAlbumImageAndResize(fd.albumId, imageThumbnail, 96, 96, R.drawable.artwork_default_micro_kind);
     }
 
     public void unbindDrawables() {

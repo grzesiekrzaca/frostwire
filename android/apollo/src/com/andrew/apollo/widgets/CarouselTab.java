@@ -13,16 +13,13 @@ package com.andrew.apollo.widgets;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import com.andrew.apollo.cache.ImageFetcher;
+import com.frostwire.android.util.ImageFetcher;
 import com.andrew.apollo.utils.ApolloUtils;
-import com.andrew.apollo.utils.BitmapUtils;
 import com.andrew.apollo.utils.MusicUtils;
 import com.frostwire.android.R;
 import com.frostwire.android.util.ImageLoader;
@@ -105,8 +102,8 @@ public class CarouselTab extends FrameLayoutWithOverlay {
      */
     public void blurPhoto(final Activity context, final String artist,
             final String album) {
-        final ImageLoader loader = ImageLoader.getInstance(context.getApplicationContext());
-        loader.loadAndBlurWithAlternative(ImageLoader.getArtistArtUri(artist),ImageLoader.getAlbumArtUri(MusicUtils.getIdForAlbum(context, album, artist)),mPhoto);
+        final ImageFetcher fetcher = ImageFetcher.getInstance(context.getApplicationContext());
+        fetcher.loadAndBlurWithAlternative(ImageLoader.getArtistArtUri(artist),ImageLoader.getAlbumArtUri(MusicUtils.getIdForAlbum(context, album, artist)),mPhoto);
     }
 
     /**
@@ -118,7 +115,7 @@ public class CarouselTab extends FrameLayoutWithOverlay {
     public void setAlbumPhoto(final Activity context, final String album, final String artist) {
         if (!TextUtils.isEmpty(album)) {
             mAlbumArt.setVisibility(View.VISIBLE);
-            mFetcher.loadAlbumImage(artist, album,
+            mFetcher.loadAlbumImage(
                     MusicUtils.getIdForAlbum(context, album, artist), mAlbumArt);
         } else {
             setDefault(context);
@@ -134,7 +131,7 @@ public class CarouselTab extends FrameLayoutWithOverlay {
      */
     public void fetchAlbumPhoto(final Activity context, final String album, final String artist) {
         if (!TextUtils.isEmpty(album)) {
-            mFetcher.loadAlbumImage(artist, album, -1, mAlbumArt);
+            mFetcher.loadAlbumImage(-1, mAlbumArt);
         } else {
             setDefault(context);
         }
@@ -150,7 +147,7 @@ public class CarouselTab extends FrameLayoutWithOverlay {
         final String lastAlbum = MusicUtils.getLastAlbumForArtist(context, artist);
         if (!TextUtils.isEmpty(lastAlbum)) {
             // Set the last album the artist played
-            mFetcher.loadAlbumImage(artist, lastAlbum,
+            mFetcher.loadAlbumImage(
                     MusicUtils.getIdForAlbum(context, lastAlbum, artist), mPhoto);
             // Play the album
             mPhoto.setOnClickListener(new OnClickListener() {

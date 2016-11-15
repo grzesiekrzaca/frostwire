@@ -40,6 +40,7 @@ import com.frostwire.android.gui.adapters.menu.FileListAdapter.FileDescriptorIte
 import com.frostwire.android.gui.services.Engine;
 import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.*;
+import com.frostwire.android.util.ImageFetcher;
 import com.frostwire.android.util.ImageLoader;
 import com.frostwire.android.util.SystemUtils;
 import com.frostwire.bittorrent.BTEngine;
@@ -66,7 +67,7 @@ public class FileListAdapter extends AbstractListAdapter<FileDescriptorItem> {
     private static final Logger LOG = Logger.getLogger(FileListAdapter.class);
 
     private final byte fileType;
-    private final ImageLoader thumbnailLoader;
+    private final ImageFetcher thumbnailLoader;
     private final DownloadButtonClickListener downloadButtonClickListener;
 
     protected FileListAdapter(Context context, List<FileDescriptor> files, byte fileType) {
@@ -77,7 +78,7 @@ public class FileListAdapter extends AbstractListAdapter<FileDescriptorItem> {
         setAdapterFilter(fileListFilter);
 
         this.fileType = fileType;
-        this.thumbnailLoader = ImageLoader.getInstance(context);
+        this.thumbnailLoader = ImageFetcher.getInstance(context);
         this.downloadButtonClickListener = new DownloadButtonClickListener();
 
         checkSDStatus();
@@ -266,10 +267,9 @@ public class FileListAdapter extends AbstractListAdapter<FileDescriptorItem> {
             }
 
             if (fd.fileType == Constants.FILE_TYPE_AUDIO) {
-                Uri uri = ContentUris.withAppendedId(ImageLoader.ALBUM_THUMBNAILS_URI, fd.albumId);
                 Uri uriRetry = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, fd.id);
                 uriRetry = ImageLoader.getMetadataArtUri(uriRetry);
-                thumbnailLoader.load(uri, uriRetry, fileThumbnail, 96, 96);
+                thumbnailLoader.loadAlbumImageAndResizeOrTryAlternative(fd.albumId, uriRetry,fileThumbnail, 96, 96);
             } else if (fd.fileType == Constants.FILE_TYPE_VIDEOS) {
                 Uri uri = ContentUris.withAppendedId(Video.Media.EXTERNAL_CONTENT_URI, fd.id);
                 Uri uriRetry = ImageLoader.getMetadataArtUri(uri);

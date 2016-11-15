@@ -77,7 +77,7 @@ public class AlbumAdapter extends ApolloFragmentAdapter<Album> implements Apollo
 
         if (mImageFetcher != null && dataHolder != null && Ref.alive(holder.mImage)) {
             // Asynchronously load the album images into the adapter
-            mImageFetcher.loadAlbumImage(dataHolder.mLineTwo, dataHolder.mLineOne, dataHolder.mItemId, holder.mImage.get());
+            mImageFetcher.loadAlbumImage(dataHolder.mItemId, holder.mImage.get());
         }
 
         // List view only items

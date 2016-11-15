@@ -24,7 +24,7 @@ import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.Toast;
 import com.andrew.apollo.Config;
-import com.andrew.apollo.cache.ImageFetcher;
+import com.frostwire.android.util.ImageFetcher;
 import com.frostwire.android.gui.services.Engine;
 import com.andrew.apollo.ui.activities.ShortcutActivity;
 import com.devspark.appmsg.AppMsg;
