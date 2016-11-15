@@ -31,12 +31,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
-import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView.ScaleType;
 import android.widget.SearchView.OnQueryTextListener;
 import com.andrew.apollo.IApolloService;
-import com.andrew.apollo.cache.ImageFetcher;
+import com.frostwire.android.util.ImageFetcher;
 import com.andrew.apollo.format.PrefixHighlighter;
 import com.andrew.apollo.recycler.RecycleHolder;
 import com.andrew.apollo.ui.MusicViewHolder;
@@ -473,7 +472,7 @@ public class SearchActivity extends Activity implements LoaderCallbacks<Cursor>,
                 holder.mLineTwo.get().setText(artist);
 
                 // Asynchronously load the album images into the adapter
-                mImageFetcher.loadAlbumImage(artist, album, id, holder.mImage.get());
+                mImageFetcher.loadAlbumImage(id, holder.mImage.get());
 
                 // Highlight the query
                 mHighlighter.setText(holder.mLineOne.get(), album, mPrefix);

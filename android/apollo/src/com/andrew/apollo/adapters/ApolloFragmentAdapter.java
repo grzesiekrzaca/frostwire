@@ -25,13 +25,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import com.andrew.apollo.cache.ImageFetcher;
+import com.frostwire.android.util.ImageFetcher;
 import com.andrew.apollo.model.*;
 import com.andrew.apollo.ui.MusicViewHolder;
 import com.andrew.apollo.utils.ApolloUtils;
 import com.andrew.apollo.utils.Lists;
 import com.andrew.apollo.utils.MusicUtils;
-import com.frostwire.util.Logger;
 import com.frostwire.util.Ref;
 
 import java.util.List;

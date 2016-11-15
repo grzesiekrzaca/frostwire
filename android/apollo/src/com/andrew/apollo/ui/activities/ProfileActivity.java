@@ -17,11 +17,9 @@ import android.app.SearchManager;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
@@ -31,7 +29,7 @@ import android.view.SubMenu;
 import android.view.View;
 import com.andrew.apollo.Config;
 import com.andrew.apollo.adapters.PagerAdapter;
-import com.andrew.apollo.cache.ImageFetcher;
+import com.frostwire.android.util.ImageFetcher;
 import com.andrew.apollo.menu.FragmentMenuItems;
 import com.andrew.apollo.menu.PhotoSelectionDialog;
 import com.andrew.apollo.menu.PhotoSelectionDialog.ProfileType;
@@ -550,23 +548,19 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
 
                         cursor.close();
 
-                        //todo fixme - use image fetcher and change Media store entry or add persistent alternate image info (pending UC analyses)
+                        //todo fixme - use image fetcher and add persistent alternate image info
 
-
-                        String key = mProfileName;
                         if (isArtist()) {
-                            key = mArtistName;
+                            mImageFetcher.setArtistImageUri(mArtistName, selectedImage);
+                            mImageFetcher.loadArtistImage(mArtistName,mTabCarousel.getPhoto());
                         } else if (isAlbum()) {
-//                            key = ImageFetcher.generateAlbumCacheKey(mProfileName, mArtistName);
+                            long id = MusicUtils.getIdForAlbum(getApplicationContext(), mProfileName, mArtistName);
+                            mImageFetcher.setAlbumImageUri(id, selectedImage);
+                            mImageFetcher.loadAlbumImage(id, mTabCarousel.getAlbumArt());
+                        } else {
+                            mImageFetcher.setPlaylistImageUri(mProfileName, selectedImage);
+                            mImageFetcher.loadPlaylistImage(mProfileName, mTabCarousel.getPhoto());
                         }
-
-//                        final Bitmap bitmap = ImageFetcher.decodeSampledBitmapFromFile(picturePath);
-//                        mImageFetcher.addBitmapToCache(key, bitmap);
-//                        if (isAlbum()) {
-//                            mTabCarousel.getAlbumArt().setImageBitmap(bitmap);
-//                        } else {
-//                            mTabCarousel.getPhoto().setImageBitmap(bitmap);
-//                        }
                     }
                 } catch (Throwable t) {
                     // it seems to be complaining about not having the '_data' column.

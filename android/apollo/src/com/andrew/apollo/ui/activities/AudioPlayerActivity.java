@@ -56,7 +56,7 @@ import android.widget.TextView;
 import com.andrew.apollo.IApolloService;
 import com.andrew.apollo.MusicPlaybackService;
 import com.andrew.apollo.adapters.PagerAdapter;
-import com.andrew.apollo.cache.ImageFetcher;
+import com.frostwire.android.util.ImageFetcher;
 import com.andrew.apollo.menu.DeleteDialog;
 import com.andrew.apollo.ui.fragments.QueueFragment;
 import com.andrew.apollo.utils.ApolloUtils;

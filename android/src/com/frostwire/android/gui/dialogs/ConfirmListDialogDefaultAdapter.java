@@ -31,6 +31,7 @@ import com.frostwire.android.R;
 import com.frostwire.android.gui.dialogs.AbstractConfirmListDialog.SelectionMode;
 import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.AbstractListAdapter;
+import com.frostwire.android.util.ImageFetcher;
 import com.frostwire.android.util.ImageLoader;
 import com.frostwire.util.Logger;
 
@@ -136,7 +137,7 @@ abstract class ConfirmListDialogDefaultAdapter<T> extends AbstractListAdapter {
         ImageView imageView = (ImageView) findView(view, layoutMapping.get(selectionMode).get(ITEM_ART));
         final CharSequence itemThumbnailUrl = getItemThumbnailUrl(item);
         if (itemThumbnailUrl != null && itemThumbnailUrl.length() != 0) {
-            ImageLoader.getInstance(getContext()).load(Uri.parse((String) itemThumbnailUrl), imageView);
+            ImageFetcher.getInstance(getContext()).load(Uri.parse((String) itemThumbnailUrl), imageView);
         }
 
         final int itemThumbnailResourceId = getItemThumbnailResourceId(item);

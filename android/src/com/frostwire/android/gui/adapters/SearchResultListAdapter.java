@@ -36,6 +36,7 @@ import com.frostwire.android.gui.views.AbstractListAdapter;
 import com.frostwire.android.gui.views.ClickAdapter;
 import com.frostwire.android.gui.views.MediaPlaybackOverlay;
 import com.frostwire.android.gui.views.SearchThumbnailImageView;
+import com.frostwire.android.util.ImageFetcher;
 import com.frostwire.android.util.ImageLoader;
 import com.frostwire.licenses.Licenses;
 import com.frostwire.search.FileSearchResult;
@@ -68,14 +69,14 @@ public abstract class SearchResultListAdapter extends AbstractListAdapter<Search
 
     private int fileType;
 
-    private ImageLoader thumbLoader;
+    private ImageFetcher thumbLoader;
 
     protected SearchResultListAdapter(Context context) {
         super(context, R.layout.view_bittorrent_search_result_list_item);
         this.linkListener = new OnLinkClickListener();
         this.previewClickListener = new PreviewClickListener(context, this);
         this.fileType = NO_FILE_TYPE;
-        this.thumbLoader = ImageLoader.getInstance(context);
+        this.thumbLoader = ImageFetcher.getInstance(context);
     }
 
     public int getFileType() {
