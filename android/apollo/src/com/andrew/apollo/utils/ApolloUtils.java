@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.Toast;
 import com.andrew.apollo.Config;
+import com.frostwire.android.gui.services.Engine;
 import com.frostwire.android.util.ImageFetcher;
 import com.andrew.apollo.ui.activities.ShortcutActivity;
 import com.devspark.appmsg.AppMsg;
@@ -140,93 +141,69 @@ public final class ApolloUtils {
      * @param mimeType    The MIME type of the shortcut
      * @param context     The {@link Context} to use to
      */
-    public static void createShortcutIntent(final String displayName, final String artistName,
-                                            final Long id, final String mimeType, final Activity context) {
-
-        PrepareShortcutIntentTask prepareShortcutIntentTask = new PrepareShortcutIntentTask();
-        prepareShortcutIntentTask.setParams(displayName, artistName, id, mimeType, context);
-        prepareShortcutIntentTask.execute();
-    }
-
-    private static class PrepareShortcutIntentTask extends AsyncTask<Void, Void, Boolean> {
-
-        private String displayName;
-        private String artistName;
-        private Long id;
-        private String mimeType;
-        private Activity context;
-        private boolean parametersSet = false;
-
-        protected void setParams(final String displayName, final String artistName,
-                                 final Long id, final String mimeType, final Activity context){
-            this.displayName = displayName;
-            this.artistName = artistName;
-            this.id = id;
-            this.mimeType = mimeType;
-            this.context = context;
-            this.parametersSet = true;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... voids) {
-            if(!parametersSet){
-                Log.e("ApolloUtils", "PrepareShortcutIntentTask parameters were not set!");
-                return false;
-            }
-            try {
+    public static void createShortcutIntentAsync(final String displayName, final String artistName,
+                                                 final Long id, final String mimeType, final Activity context) {
+        Runnable task = new Runnable() {
+            public void run() {
                 final ImageFetcher fetcher = getImageFetcher(context);
                 Bitmap bitmap = null;
-
-                if(artistName != null) {
-                    bitmap = fetcher.getArtistImage(artistName);
-                } else {
-                    if (id != -1) {
-                        bitmap = fetcher.getAlbumImage(id);
+                boolean success = true;
+                try {
+                    if (artistName != null) {
+                        bitmap = fetcher.getArtistImage(artistName);
                     } else {
-                        bitmap = fetcher.getPlaylistImage(displayName);
+                        if (id != -1) {
+                            bitmap = fetcher.getAlbumImage(id);
+                        } else {
+                            bitmap = fetcher.getPlaylistImage(displayName);
+                        }
                     }
+                    if (bitmap == null) {
+                        bitmap = fetcher.getDefaultArtwork();
+                    }
+
+                    final Intent shortcutIntent = new Intent(context, ShortcutActivity.class);
+                    shortcutIntent.setAction(Intent.ACTION_VIEW);
+                    shortcutIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    shortcutIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    shortcutIntent.putExtra(Config.ID, id);
+                    shortcutIntent.putExtra(Config.NAME, displayName);
+                    shortcutIntent.putExtra(Config.MIME_TYPE, mimeType);
+
+                    // Intent that actually sets the shortcut
+                    final Intent intent = new Intent();
+                    intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, BitmapUtils.resizeAndCropCenter(bitmap, 96));
+                    intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
+                    intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, displayName);
+                    intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
+                    context.sendBroadcast(intent);
+                } catch (Exception e) {
+                    Log.e("ApolloUtils", "createShortcutIntent", e);
+                    success = false;
                 }
-                if (bitmap == null) {
-                    bitmap = fetcher.getDefaultArtwork();
-                }
 
+                final boolean finalSuccess = success;
 
-                // Intent used when the icon is touched
-                final Intent shortcutIntent = new Intent(context, ShortcutActivity.class);
-                shortcutIntent.setAction(Intent.ACTION_VIEW);
-                shortcutIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                shortcutIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                shortcutIntent.putExtra(Config.ID, id);
-                shortcutIntent.putExtra(Config.NAME, displayName);
-                shortcutIntent.putExtra(Config.MIME_TYPE, mimeType);
-
-                // Intent that actually sets the shortcut
-                final Intent intent = new Intent();
-                intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, BitmapUtils.resizeAndCropCenter(bitmap, 96));
-                intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
-                intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, displayName);
-                intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
-                context.sendBroadcast(intent);
-            } catch (Exception e) {
-                Log.e("ApolloUtils", "createShortcutIntent", e);
-                return false;
+                // UI thread portion
+                Runnable postExecute = new Runnable() {
+                    public void run() {
+                        if (finalSuccess) {
+                            AppMsg.makeText(context,
+                                    context.getString(R.string.pinned_to_home_screen, displayName),
+                                    AppMsg.STYLE_CONFIRM).show();
+                        } else {
+                            AppMsg.makeText(
+                                    context,
+                                    context.getString(R.string.could_not_be_pinned_to_home_screen, displayName),
+                                    AppMsg.STYLE_ALERT).show();
+                        }
+                    }
+                };
+                context.runOnUiThread(postExecute);
             }
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean success) {
-            super.onPostExecute(success);
-            if(success){
-                AppMsg.makeText(context,
-                        context.getString(R.string.pinned_to_home_screen, displayName),
-                        AppMsg.STYLE_CONFIRM).show();
-            } else {
-                AppMsg.makeText(
-                        context,
-                        context.getString(R.string.could_not_be_pinned_to_home_screen, displayName),
-                        AppMsg.STYLE_ALERT).show();
-            }
-        }
+        };
+        Engine.instance().getThreadPool().submit(task);
     }
+
+
 }
