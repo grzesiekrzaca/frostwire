@@ -12,29 +12,24 @@
 package com.frostwire.android.util;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
-import android.util.Log;
 import android.widget.ImageView;
+
 import com.andrew.apollo.utils.MusicUtils;
 import com.andrew.apollo.utils.ThemeUtils;
 import com.frostwire.android.R;
 
 
 /**
- * Class that translates image requests (contextual - artist album images) from inside the app for image loader (generic - images is an image)
+ * Class that translates image requests (contextual - artist album images) from inside the app for image loader (generic)
+ * Also a simple write through for other images (so that all classes get images from one source [class] hopfully for easier maintenance)
  */
 public final class ImageFetcher {
 
     /**
-     * Default artwork
-     */
-    private final BitmapDrawable mDefaultArtwork;
-
-    /**
-     * Default album art
+     * Default bitmap to return (doesn't make sense to have that in volatile cache)
      */
     private final Bitmap mDefault;
 
@@ -53,20 +48,16 @@ public final class ImageFetcher {
     private ImageFetcher(final Context context) {
         mLoader = ImageLoader.getInstance(context.getApplicationContext());
         mUriChanger = new CachedDbUriChanger(context.getApplicationContext());
-//        mUriChanger = new SimpleUriChanger();
-        Resources mResources = context.getResources();
+
         // Create the default artwork
         final ThemeUtils theme = new ThemeUtils(context);
-//        mDefault = ((BitmapDrawable) theme.getDrawable("default_artwork")).getBitmap();
-        mDefault = ((BitmapDrawable) mResources.getDrawable(R.drawable.social_wizard_reddit)).getBitmap();
-        mDefaultArtwork = new BitmapDrawable(mResources, mDefault);
-        // No filter and no dither makes things much quicker
-        mDefaultArtwork.setFilterBitmap(false);
-        mDefaultArtwork.setDither(false);
+        mDefault = ((BitmapDrawable) theme.getDrawable("default_artwork")).getBitmap();
     }
 
     /**
      * Used to create a singleton of the image fetcher
+     * if exists - just use the instance
+     * if doesn't exist use synchronized creation method so that constructor is fired only once
      *
      * @param context The {@link Context} to use
      * @return A new instance of this class.
@@ -108,7 +99,7 @@ public final class ImageFetcher {
      * Used to fetch the current artwork.
      */
     public void loadCurrentArtwork(final ImageView imageView) {
-        loadAlbumImage(MusicUtils.getCurrentAlbumId(),imageView);
+        loadAlbumImage(MusicUtils.getCurrentAlbumId(), imageView);
     }
 
     /**
@@ -189,7 +180,6 @@ public final class ImageFetcher {
 
     /**
      * Methods for getting the bitmap - this cannot be done on main thread
-     *
      */
     public Bitmap getArtistImage(final String artist) {
         Bitmap bitmap = mLoader.get(mUriChanger.changeIfNeeded(ImageLoader.getArtistArtUri(artist)));
@@ -202,7 +192,6 @@ public final class ImageFetcher {
     }
 
     public Bitmap getPlaylistImage(final String playlistName) {
-        //todo make it work
         Bitmap bitmap = mLoader.get(mUriChanger.changeIfNeeded(ImageLoader.getPlaylistArtUri(playlistName)));
         return (bitmap != null) ? bitmap : getDefaultArtwork();
     }

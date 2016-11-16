@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
-import android.util.Log;
 
 import com.frostwire.util.Logger;
 import com.frostwire.util.StringUtils;
@@ -18,7 +17,7 @@ import java.util.Map;
  * Used to change Uri of a request to custom Uri set by the user to facilitate custom image logic
  */
 
-public class CachedDbUriChanger implements UriChanger{
+class CachedDbUriChanger implements UriChanger {
 
     private static final Logger LOG = Logger.getLogger(CachedDbUriChanger.class);
 
@@ -29,29 +28,29 @@ public class CachedDbUriChanger implements UriChanger{
      */
     private HashMap<String, String> cache = new HashMap<>();
 
-    public CachedDbUriChanger(Context context){
+    CachedDbUriChanger(Context context) {
         mAlternateUriStore = new AlternateUriStore(context);
         mAlternateUriStore.populateCache(cache);
     }
 
     public Uri changeIfNeeded(Uri uri) {
         Uri alternateUri = getAlternateUri(uri);
-        return alternateUri==null?uri:alternateUri;
+        return alternateUri == null ? uri : alternateUri;
     }
 
     private Uri getAlternateUri(Uri uri) {
         String uriString = cache.get(uri.toString());
-        return StringUtils.isNullOrEmpty(uriString)?uri:Uri.parse(uriString);
+        return StringUtils.isNullOrEmpty(uriString) ? uri : Uri.parse(uriString);
     }
 
     @Override
     public void setChangeBehaviour(Uri baseUri, Uri alternateUri) {
-        if (StringUtils.isNullOrEmpty(baseUri.toString()) || StringUtils.isNullOrEmpty(alternateUri.toString()) ) {
+        if (StringUtils.isNullOrEmpty(baseUri.toString()) || StringUtils.isNullOrEmpty(alternateUri.toString())) {
             LOG.warn("Invalid uri association");
             return;
         }
-        cache.put(baseUri.toString(),alternateUri.toString());
-        mAlternateUriStore.associate(baseUri.toString(),alternateUri.toString());
+        cache.put(baseUri.toString(), alternateUri.toString());
+        mAlternateUriStore.associate(baseUri.toString(), alternateUri.toString());
     }
 
     @Override
@@ -106,7 +105,7 @@ public class CachedDbUriChanger implements UriChanger{
 
             database.beginTransaction();
 
-            database.delete(TABLE_NAME, BASE_URI_COLUMN_NAME + " = ?", new String[] {
+            database.delete(TABLE_NAME, BASE_URI_COLUMN_NAME + " = ?", new String[]{
                     baseUri
             });
             database.insert(TABLE_NAME, null, values);
@@ -115,17 +114,17 @@ public class CachedDbUriChanger implements UriChanger{
             database.endTransaction();
         }
 
-        void populateCache(Map<String, String> map){
+        void populateCache(Map<String, String> map) {
             try {
                 final SQLiteDatabase database = getReadableDatabase();
 
                 Cursor cursor = database.query(TABLE_NAME, PROJECTION, null, null, null,
                         null, null, null);
                 if (cursor != null) {
-                    while(cursor.moveToNext()){
+                    while (cursor.moveToNext()) {
                         final String alternateUri = cursor.getString(cursor.getColumnIndexOrThrow(ALTERNATE_URI_COLUMN_NAME));
                         final String baseUri = cursor.getString(cursor.getColumnIndexOrThrow(BASE_URI_COLUMN_NAME));
-                        map.put(baseUri,alternateUri);
+                        map.put(baseUri, alternateUri);
                     }
                     cursor.close();
                 }
@@ -139,7 +138,7 @@ public class CachedDbUriChanger implements UriChanger{
          */
         void disassociate(final String baseUri) {
             final SQLiteDatabase database = getReadableDatabase();
-            database.delete(TABLE_NAME, BASE_URI_COLUMN_NAME + " = ?", new String[] {
+            database.delete(TABLE_NAME, BASE_URI_COLUMN_NAME + " = ?", new String[]{
                     baseUri
             });
 
