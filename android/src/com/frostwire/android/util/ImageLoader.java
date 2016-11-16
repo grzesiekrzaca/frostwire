@@ -30,7 +30,6 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.widget.ImageView;
 
 import com.andrew.apollo.utils.BitmapUtils;
@@ -77,6 +76,9 @@ public final class ImageLoader {
     private static final Uri METADATA_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + METADATA_AUTHORITY);
 
     public static final Uri PLAYLIST_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + PLAYLIST_AUTHORITY);
+
+    //todo calculate optimal size (also move that 96x96 from FileList)
+    private static final int MAX_IMAGE_DIMENSION = 768;
 
     private final ImageCache cache;
     private final Picasso picasso;
@@ -153,12 +155,10 @@ public final class ImageLoader {
         int memSize = SystemUtils.calculateMemoryCacheSize(context);
 
 
-
         this.cache = new ImageCache(directory, diskSize, memSize);
         this.picasso = new Builder(context).addRequestHandler(new ImageRequestHandler(context.getApplicationContext())).
                 memoryCache(cache).executor(Engine.instance().getThreadPool()).build();
         picasso.setIndicatorsEnabled(false);
-        picasso.setIndicatorsEnabled(true);
     }
 
     private Transformation blur = new Transformation() {
@@ -176,11 +176,10 @@ public final class ImageLoader {
     };
 
     void loadAndBlur(Uri uri, ImageView mPhoto) {
-            picasso.load(uri).fit().transform(blur).into(mPhoto);
+        picasso.load(uri).fit().transform(blur).into(mPhoto);
     }
 
     void loadAndBlurWithAlternative(Uri primaryUri, final Uri secondaryUri, final ImageView mPhoto) {
-        LOG.warn("cache mem max: "+cache.maxSize() + " mem:" + cache.size() );
         picasso.load(primaryUri).fit().transform(blur).into(mPhoto, new Callback.EmptyCallback() {
             @Override
             public void onError() {
@@ -214,7 +213,7 @@ public final class ImageLoader {
         if (!shutdown) {
             picasso.load(uri).noFade()
                     .placeholder(placeholderResId)
-                    .resize(1024,1024)
+                    .resize(MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION)
                     .onlyScaleDown()
                     .centerCrop()
                     .into(target);
@@ -231,7 +230,8 @@ public final class ImageLoader {
 
     Bitmap get(Uri uri) {
         try {
-            return picasso.load(uri).resize(1024,1024)
+            return picasso.load(uri)
+                    .resize(MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION)
                     .onlyScaleDown()
                     .centerCrop()
                     .get();

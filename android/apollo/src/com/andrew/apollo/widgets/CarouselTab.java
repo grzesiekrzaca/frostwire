@@ -80,7 +80,7 @@ public class CarouselTab extends FrameLayoutWithOverlay {
 
     /**
      * Used to set the artist image in the artist profile.
-     * 
+     *
      * @param context The {@link Context} to use.
      * @param artist The name of the artist in the profile the user is viewing.
      */
@@ -94,21 +94,21 @@ public class CarouselTab extends FrameLayoutWithOverlay {
 
     /**
      * Used to blur the artist image in the album profile.
-     * 
+     *
      * @param context The {@link Context} to use.
      * @param artist The artist nmae used to fetch the cached artist image.
      * @param album The album name used to fetch the album art in case the
      *            artist image is missing.
      */
     public void blurPhoto(final Activity context, final String artist,
-            final String album) {
+                          final String album) {
         final ImageFetcher fetcher = ImageFetcher.getInstance(context.getApplicationContext());
-        fetcher.loadAndBlurWithAlternative(ImageLoader.getArtistArtUri(artist),ImageLoader.getAlbumArtUri(MusicUtils.getIdForAlbum(context, album, artist)),mPhoto);
+        fetcher.loadAndBlurWithAlternative(ImageLoader.getArtistArtUri(artist), ImageLoader.getAlbumArtUri(MusicUtils.getIdForAlbum(context, album, artist)), mPhoto);
     }
 
     /**
      * Used to set the album art in the album profile.
-     * 
+     *
      * @param context The {@link Context} to use.
      * @param album The name of the album in the profile the user is viewing.
      */
@@ -124,7 +124,7 @@ public class CarouselTab extends FrameLayoutWithOverlay {
 
     /**
      * Used to fetch for the album art via Last.fm.
-     * 
+     *
      * @param context The {@link Context} to use.
      * @param album The name of the album in the profile the user is viewing.
      * @param artist The name of the album artist in the profile the user is viewing
@@ -139,7 +139,7 @@ public class CarouselTab extends FrameLayoutWithOverlay {
 
     /**
      * Used to set the album art in the artist profile.
-     * 
+     *
      * @param context The {@link Context} to use.
      * @param artist The name of the artist in the profile the user is viewing.
      */
@@ -166,22 +166,17 @@ public class CarouselTab extends FrameLayoutWithOverlay {
 
     /**
      * Used to set the header image for playlists and genres.
-     * 
+     *
      * @param context The {@link Context} to use.
      * @param profileName The key used to fetch the image.
      */
     public void setPlaylistOrGenrePhoto(final Activity context,
             final String profileName) {
-//        if (!TextUtils.isEmpty(profileName)) {
-//            final Bitmap image = mFetcher.getCachedBitmap(profileName);
-//            if (image != null) {
-//                mPhoto.setImageBitmap(image);
-//            } else {
-//                setDefault(context);
-//            }
-//        } else {
-//            setDefault(context);
-//        }
+        if (!TextUtils.isEmpty(profileName)) {
+            mFetcher.loadPlaylistImage(profileName, mPhoto);
+        } else {
+            setDefault(context);
+        }
     }
 
     /**
