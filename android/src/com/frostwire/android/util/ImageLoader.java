@@ -231,7 +231,10 @@ public final class ImageLoader {
 
     Bitmap get(Uri uri) {
         try {
-            return picasso.load(uri).get();
+            return picasso.load(uri).resize(1024,1024)
+                    .onlyScaleDown()
+                    .centerCrop()
+                    .get();
         } catch (IOException e) {
             return null;
         }

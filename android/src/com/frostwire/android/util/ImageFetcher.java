@@ -192,18 +192,18 @@ public final class ImageFetcher {
      *
      */
     public Bitmap getArtistImage(final String artist) {
-        Bitmap bitmap = mLoader.get(ImageLoader.getArtistArtUri(artist));
+        Bitmap bitmap = mLoader.get(mUriChanger.changeIfNeeded(ImageLoader.getArtistArtUri(artist)));
         return (bitmap != null) ? bitmap : getDefaultArtwork();
     }
 
     public Bitmap getAlbumImage(final Long id) {
-        Bitmap bitmap = mLoader.get(ImageLoader.getAlbumArtUri(id));
+        Bitmap bitmap = mLoader.get(mUriChanger.changeIfNeeded(ImageLoader.getAlbumArtUri(id)));
         return (bitmap != null) ? bitmap : getDefaultArtwork();
     }
 
     public Bitmap getPlaylistImage(final String playlistName) {
         //todo make it work
-        Bitmap bitmap = mLoader.get(ImageLoader.getPlaylistArtUri(playlistName));
+        Bitmap bitmap = mLoader.get(mUriChanger.changeIfNeeded(ImageLoader.getPlaylistArtUri(playlistName)));
         return (bitmap != null) ? bitmap : getDefaultArtwork();
     }
 

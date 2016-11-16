@@ -32,7 +32,6 @@ import android.media.MediaPlayer;
 import android.media.RemoteControlClient;
 import android.media.audiofx.AudioEffect;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -874,8 +873,7 @@ public class MusicPlaybackService extends Service {
         }
 
         if (!mAnyActivityInForeground && isPlaying()) {
-            UpdateNotificationTask updateNotificationTask = new UpdateNotificationTask();
-            updateNotificationTask.execute();
+            updateNotificationAsync();
         } else if (mAnyActivityInForeground) {
             mNotificationHelper.killNotification();
             if (!isPlaying()) {
@@ -884,18 +882,22 @@ public class MusicPlaybackService extends Service {
         }
     }
 
-    private class UpdateNotificationTask extends AsyncTask<Void, Void, Bitmap> {
-        @Override
-        protected Bitmap doInBackground(Void... voids) {
-            return getAlbumArt();
-        }
+    private void updateNotificationAsync() {
+        Runnable task = new Runnable() {
+            public void run() {
+                // background portion
+                final Bitmap bitmap = getAlbumArt();
 
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            super.onPostExecute(bitmap);
-            mNotificationHelper.buildNotification(getAlbumName(), getArtistName(),
-                    getTrackName(), getAlbumId(), bitmap, isPlaying());
-        }
+                // UI thread portion
+                Runnable postExecute = new Runnable() {
+                    public void run() {
+                        mNotificationHelper.buildNotification(getAlbumName(), getArtistName(), getTrackName(), getAlbumId(), bitmap, isPlaying());
+                    }
+                };
+                mPlayerHandler.post(postExecute);
+            }
+        };
+        Engine.instance().getThreadPool().submit(task);
     }
 
     /**
