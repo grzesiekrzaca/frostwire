@@ -26,7 +26,6 @@ import android.widget.Toast;
 import com.andrew.apollo.Config;
 import com.frostwire.android.gui.services.Engine;
 import com.frostwire.android.util.ImageFetcher;
-import com.frostwire.android.gui.services.Engine;
 import com.andrew.apollo.ui.activities.ShortcutActivity;
 import com.devspark.appmsg.AppMsg;
 import com.frostwire.android.R;
@@ -153,20 +152,20 @@ public final class ApolloUtils {
                 Bitmap bitmap = null;
                 boolean success = true;
                 try {
-                     if(artistName != null) {
-                    bitmap = fetcher.getArtistImage(artistName);
-                } else {
-                    if (id != -1) {
-                        bitmap = fetcher.getAlbumImage(id);
+                    if (artistName != null) {
+                        bitmap = fetcher.getArtistImage(artistName);
                     } else {
-                        bitmap = fetcher.getPlaylistImage(displayName);
+                        if (id != -1) {
+                            bitmap = fetcher.getAlbumImage(id);
+                        } else {
+                            bitmap = fetcher.getPlaylistImage(displayName);
+                        }
                     }
-                }
                     if (bitmap == null) {
                         bitmap = fetcher.getDefaultArtwork();
                     }
                     //check if activity context is still valid
-                    if(Ref.alive(context)) {
+                    if (Ref.alive(context)) {
                         final Intent shortcutIntent = new Intent(context.get(), ShortcutActivity.class);
                         shortcutIntent.setAction(Intent.ACTION_VIEW);
                         shortcutIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
