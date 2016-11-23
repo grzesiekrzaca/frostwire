@@ -19,6 +19,8 @@ package com.frostwire.android.gui.activities.internal;
 
 import android.app.Fragment;
 import android.content.Intent;
+import android.preference.PreferenceFragment;
+
 import com.andrew.apollo.ui.activities.AudioPlayerActivity;
 import com.frostwire.android.R;
 import com.frostwire.android.core.ConfigurationManager;
@@ -57,8 +59,7 @@ public final class MainController {
     }
 
     public void showPreferences() {
-        Intent i = new Intent(activity, SettingsActivity.class);
-        activity.startActivity(i);
+        switchFragment(R.id.menu_main_support);
     }
 
     public void launchMyMusic() {

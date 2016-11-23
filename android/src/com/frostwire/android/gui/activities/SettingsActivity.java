@@ -133,6 +133,18 @@ public class SettingsActivity extends PreferenceActivity {
         updateConnectSwitch();
     }
 
+
+    private void addPreferencesFromResource (int id, PreferenceGroup newParent) {
+        PreferenceScreen screen = getPreferenceScreen ();
+        int last = screen.getPreferenceCount ();
+        addPreferencesFromResource (id);
+        while (screen.getPreferenceCount () > last) {
+            Preference p = screen.getPreference (last);
+            screen.removePreference (p); // decreases the preference count
+            newParent.addPreference (p);
+        }
+    }
+
     /**
      * Populate the activity with the top-level headers. Used for tablets and larger screen devices.
      */
@@ -864,7 +876,7 @@ public class SettingsActivity extends PreferenceActivity {
                                     continue;
                                 }
                                 PlayStore.getInstance().consume(p);
-                                ConfigurationManager.instance().setBoolean(Constants.PREF_KEY_GUI_SUPPORT_FROSTWIRE, true);
+//                                ConfigurationManager.instance().setBoolean(Constants.PREF_KEY_GUI_SUPPORT_FROSTWIRE, true);
                                 LOG.info(" - " + p.description() + " (" + p.sku() + ") force-consumed!");
                                 UIUtils.showToastMessage(preference.getContext(),
                                         "Product " + p.sku() + " forced-consumed.",

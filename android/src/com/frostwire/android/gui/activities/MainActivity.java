@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceFragment;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -36,6 +37,7 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import com.andrew.apollo.IApolloService;
@@ -58,6 +60,7 @@ import com.frostwire.android.gui.dialogs.YesNoDialog;
 import com.frostwire.android.gui.fragments.BrowsePeerFragment;
 import com.frostwire.android.gui.fragments.MainFragment;
 import com.frostwire.android.gui.fragments.SearchFragment;
+import com.frostwire.android.gui.fragments.SettingsFragment;
 import com.frostwire.android.gui.fragments.TransfersFragment;
 import com.frostwire.android.gui.fragments.TransfersFragment.TransferStatus;
 import com.frostwire.android.gui.services.Engine;
@@ -118,6 +121,8 @@ public class MainActivity extends AbstractActivity implements ConfigurationUpdat
     private SearchFragment search;
     private BrowsePeerFragment library;
     private TransfersFragment transfers;
+    private SettingsFragment settings;
+    private SettingsFragment settingsSlave;
     private Fragment currentFragment;
     private final Stack<Integer> fragmentsStack;
     private PlayerMenuItemView playerItem;
@@ -332,6 +337,9 @@ public class MainActivity extends AbstractActivity implements ConfigurationUpdat
             } else if (action.equals(Constants.ACTION_REQUEST_SHUTDOWN)) {
                 UXStats.instance().log(UXAction.MISC_NOTIFICATION_EXIT);
                 showShutdownDialog();
+            } else if (action.equals(SettingsFragment.REBUILD_SETTINGS_SLAVE_ACTION)) {
+                Integer id = intent.getIntExtra(SettingsFragment.ID_EXTRA_NAME, -1);
+                settingsSlave.rebuild(id != -1 ? id : null);
             }
         }
 
@@ -754,11 +762,32 @@ public class MainActivity extends AbstractActivity implements ConfigurationUpdat
         search = (SearchFragment) getFragmentManager().findFragmentById(R.id.activity_main_fragment_search);
         library = (BrowsePeerFragment) getFragmentManager().findFragmentById(R.id.activity_main_fragment_browse_peer);
         transfers = (TransfersFragment) getFragmentManager().findFragmentById(R.id.activity_main_fragment_transfers);
+        settings = (SettingsFragment) getFragmentManager().findFragmentById(R.id.activity_main_fragment_settings);
+        settingsSlave = (SettingsFragment) getFragmentManager().findFragmentById(R.id.activity_main_fragment_settings_slave);
         hideFragments(getFragmentManager().beginTransaction()).commit();
+//        settingsSlave.rebuild();
+        setupSettingFragments();
+    }
+
+    private void setupSettingFragments() {
+        if(getResources().getBoolean(R.bool.isTablet)) {
+            settingsSlave.rebuild(R.xml.general_settings);
+        } else {
+//
+            LinearLayout.LayoutParams settingsParams = (LinearLayout.LayoutParams) settings.getView().getLayoutParams();
+            settingsParams.weight =1;
+            settings.getView().setLayoutParams(settingsParams);
+
+            LinearLayout.LayoutParams slaveSettingsParams = (LinearLayout.LayoutParams) settingsSlave.getView().getLayoutParams();
+            slaveSettingsParams.weight =0;
+            settingsSlave.getView().setLayoutParams(slaveSettingsParams);
+
+            settingsSlave.rebuild(null);
+        }
     }
 
     private FragmentTransaction hideFragments(FragmentTransaction ts) {
-        return ts.hide(search).hide(library).hide(transfers);
+        return ts.hide(search).hide(library).hide(transfers).hide(settings).hide(settingsSlave);
     }
 
     private void setupInitialFragment(Bundle savedInstanceState) {
@@ -815,7 +844,11 @@ public class MainActivity extends AbstractActivity implements ConfigurationUpdat
     }
 
     private void switchContent(Fragment fragment, boolean addToStack) {
-        hideFragments(getFragmentManager().beginTransaction()).show(fragment).commitAllowingStateLoss();
+        if(fragment == settings){
+            hideFragments(getFragmentManager().beginTransaction()).show(fragment).show(settingsSlave).commitAllowingStateLoss();
+        } else {
+            hideFragments(getFragmentManager().beginTransaction()).show(fragment).commitAllowingStateLoss();
+        }
         if (addToStack && (fragmentsStack.isEmpty() || fragmentsStack.peek() != fragment.getId())) {
             fragmentsStack.push(fragment.getId());
         }
@@ -839,6 +872,8 @@ public class MainActivity extends AbstractActivity implements ConfigurationUpdat
                 return library;
             case R.id.menu_main_transfers:
                 return transfers;
+            case R.id.menu_main_support:
+                return settings;
             default:
                 return null;
         }

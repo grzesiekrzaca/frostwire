@@ -60,6 +60,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:tag="transfers_fragment" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <fragment
+                        android:id="@+id/activity_main_fragment_settings"
+                        android:layout_width="0dp"
+                        android:layout_weight="0.5"
+                        android:layout_height="match_parent"
+                        android:name="com.frostwire.android.gui.fragments.SettingsFragment"
+                        android:tag="settings_fragment"/>
+
+                    <fragment
+                        android:id="@+id/activity_main_fragment_settings_slave"
+                        android:layout_weight="0.5"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:name="com.frostwire.android.gui.fragments.SettingsFragment"
+                        android:tag="settings_fragment_slave"/>
+
+                </LinearLayout>
+
             </FrameLayout>
 
             <com.frostwire.android.gui.views.PlayerNotifierView
