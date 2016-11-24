@@ -23,33 +23,33 @@ public class SettingsFragment extends PreferenceFragment {
     public static final String REBUILD_SETTINGS_SLAVE_ACTION = "com.frostwire.android.gui.fragments.REBUILD";
     public static final String ID_EXTRA_NAME = "resId";
 
-    private void addPreferencesFromResourceToCategoryBottom (int id, String title) {
-        PreferenceScreen screen = getPreferenceScreen ();
+    private void addPreferencesFromResourceToCategoryBottom(int id, String title) {
+        PreferenceScreen screen = getPreferenceScreen();
         addPreferencesFromResource(R.xml.category_stub);
         PreferenceCategory newParent = (PreferenceCategory) screen.findPreference("category_stub");
         newParent.setKey(title);
         newParent.setTitle(title);
-        int last = screen.getPreferenceCount ();
-        addPreferencesFromResource (id);
-        while (screen.getPreferenceCount () > last) {
-            Preference p = screen.getPreference (last);
-            screen.removePreference (p);
-            newParent.addPreference (p);
+        int last = screen.getPreferenceCount();
+        addPreferencesFromResource(id);
+        while (screen.getPreferenceCount() > last) {
+            Preference p = screen.getPreference(last);
+            screen.removePreference(p);
+            newParent.addPreference(p);
         }
     }
 
-    private void addPreferencesFromResourceToScreenBottom (int id, String title) {
-        PreferenceScreen screen = getPreferenceScreen ();
+    private void addPreferencesFromResourceToScreenBottom(int id, String title) {
+        PreferenceScreen screen = getPreferenceScreen();
         addPreferencesFromResource(R.xml.screen_stub);
         PreferenceScreen newScreen = (PreferenceScreen) screen.findPreference("screen_stub");
         newScreen.setKey(title);
         newScreen.setTitle(title);
-        int last = screen.getPreferenceCount ();
-        addPreferencesFromResource (id);
-        while (screen.getPreferenceCount () > last) {
-            Preference p = screen.getPreference (last);
-            screen.removePreference (p);
-            newScreen.addPreference (p);
+        int last = screen.getPreferenceCount();
+        addPreferencesFromResource(id);
+        while (screen.getPreferenceCount() > last) {
+            Preference p = screen.getPreference(last);
+            screen.removePreference(p);
+            newScreen.addPreference(p);
         }
     }
 
@@ -58,7 +58,7 @@ public class SettingsFragment extends PreferenceFragment {
         Preference newPreference = new Preference(getActivity());
         newPreference.setTitle(title);
         Intent intent = new Intent(REBUILD_SETTINGS_SLAVE_ACTION, null, getActivity(), MainActivity.class);
-        intent.putExtra(ID_EXTRA_NAME,id);
+        intent.putExtra(ID_EXTRA_NAME, id);
         newPreference.setIntent(intent);
         screen.addPreference(newPreference);
     }
@@ -74,12 +74,12 @@ public class SettingsFragment extends PreferenceFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if( getActivity().getResources().getBoolean(R.bool.isTablet) ) {
+        if (getActivity().getResources().getBoolean(R.bool.isTablet)) {
             //todo clear
-            Log.w("SF","building as dir");
+            Log.w("SF", "building as dir");
             buildAsDirectory();
         } else {
-            Log.w("SF","building as screen");
+            Log.w("SF", "building as screen");
             buildAsScreen();
         }
     }
@@ -87,8 +87,8 @@ public class SettingsFragment extends PreferenceFragment {
     private void buildAsScreen() {
         addPreferencesFromResource(R.xml.base_setting_container);
         addPreferencesFromResource(R.xml.general_settings);
-        addPreferencesFromResourceToScreenBottom(R.xml.torrent_settings,"torrent");
-        addPreferencesFromResourceToCategoryBottom(R.xml.general_settings,"general");
+        addPreferencesFromResourceToScreenBottom(R.xml.torrent_settings, "torrent");
+        addPreferencesFromResourceToCategoryBottom(R.xml.general_settings, "general");
     }
 
     private void buildAsDirectory() {
@@ -98,9 +98,9 @@ public class SettingsFragment extends PreferenceFragment {
     }
 
 
-    public void rebuild(Integer screenId){
+    public void rebuild(Integer screenId) {
         getPreferenceScreen().removeAll();
-        if(screenId!=null) {
+        if (screenId != null) {
             addPreferencesFromResource(screenId);
         } else {
             getView().setVisibility(View.GONE);//todo think
