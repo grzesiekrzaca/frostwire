@@ -31,6 +31,7 @@ import com.frostwire.android.core.FileDescriptor;
 import com.frostwire.android.gui.Librarian;
 import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.AbstractDialog;
+import com.frostwire.android.gui.views.AbstractListAdapter;
 import com.frostwire.android.gui.views.MenuAction;
 import org.apache.commons.io.FilenameUtils;
 
@@ -41,9 +42,9 @@ import org.apache.commons.io.FilenameUtils;
  */
 public class RenameFileMenuAction extends MenuAction {
     private final FileDescriptor fd;
-    private final FileListAdapter adapter;
+    private final AbstractListAdapter adapter;
 
-    public RenameFileMenuAction(Context context, FileListAdapter adapter, FileDescriptor fd) {
+    public RenameFileMenuAction(Context context, AbstractListAdapter adapter, FileDescriptor fd) {
         super(context, R.drawable.contextmenu_icon_rename, R.string.rename);
         this.adapter = adapter;
         this.fd = fd;

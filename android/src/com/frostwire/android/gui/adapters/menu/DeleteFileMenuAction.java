@@ -30,6 +30,7 @@ import com.frostwire.android.core.FileDescriptor;
 import com.frostwire.android.gui.Librarian;
 import com.frostwire.android.gui.services.Engine;
 import com.frostwire.android.gui.views.AbstractDialog;
+import com.frostwire.android.gui.views.AbstractListAdapter;
 import com.frostwire.android.gui.views.MenuAction;
 
 import java.util.ArrayList;
@@ -42,10 +43,10 @@ import java.util.List;
  */
 public final class DeleteFileMenuAction extends MenuAction {
 
-    private final FileListAdapter adapter;
+    private final AbstractListAdapter adapter;
     private final List<FileDescriptor> files;
 
-    public DeleteFileMenuAction(Context context, FileListAdapter adapter, List<FileDescriptor> files) {
+    public DeleteFileMenuAction(Context context, AbstractListAdapter adapter, List<FileDescriptor> files) {
         super(context, R.drawable.contextmenu_icon_trash, files.size() > 1 ? R.string.delete_file_menu_action_count : R.string.delete_file_menu_action, files.size());
         this.adapter = adapter;
         this.files = files;
@@ -70,7 +71,11 @@ public final class DeleteFileMenuAction extends MenuAction {
         Engine.instance().getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
-                Librarian.instance().deleteFiles(adapter.getFileType(), new ArrayList<>(files), getContext());
+                if(adapter instanceof FileListAdapter) {
+                    Librarian.instance().deleteFiles(((FileListAdapter) adapter).getFileType(), new ArrayList<>(files), getContext());
+                } else {
+                    Librarian.instance().deleteFiles(((FileGridAdapter) adapter).getFileType(), new ArrayList<>(files), getContext());
+                }
             }
         });
     }

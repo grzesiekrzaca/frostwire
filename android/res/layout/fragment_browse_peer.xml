@@ -98,6 +98,7 @@
                     android:id="@+id/fragment_browse_peer_swipe_refresh"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
+
                 <ListView
                         android:id="@+id/fragment_browse_peer_list"
                         android:layout_width="match_parent"
@@ -105,8 +106,37 @@
                         android:background="@color/body_background_gray_light"
                         android:fastScrollEnabled="true"
                         android:textFilterEnabled="true"/>
+
+
             </android.support.v4.widget.SwipeRefreshLayout>
         </com.frostwire.android.gui.views.SwipeLayout>
+
+        <com.frostwire.android.gui.views.SwipeLayout
+            android:id="@+id/fragment_browse_peer_swipe_grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <android.support.v4.widget.SwipeRefreshLayout
+                android:id="@+id/fragment_browse_peer_swipe_refresh_grid"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <GridView
+                    android:id="@+id/fragment_browse_peer_grid"
+                    android:background="@color/body_background_gray_light"
+                    android:fastScrollEnabled="true"
+                    android:horizontalSpacing="@dimen/grid_item_spacing"
+                    android:numColumns="3"
+                    android:textFilterEnabled="true"
+                    android:verticalSpacing="@dimen/grid_item_spacing"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+
+
+            </android.support.v4.widget.SwipeRefreshLayout>
+        </com.frostwire.android.gui.views.SwipeLayout>
+
+
 
     </FrameLayout>
 

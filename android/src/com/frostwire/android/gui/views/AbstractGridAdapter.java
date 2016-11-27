@@ -27,13 +27,23 @@ import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
-import android.widget.*;
+import android.widget.BaseAdapter;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.Filter;
+import android.widget.Filterable;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
 
 import com.frostwire.android.R;
 import com.frostwire.util.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * We extend from ListAdapter to populate our ListViews.
@@ -44,9 +54,9 @@ import java.util.*;
  * @author gubatron
  * @author aldenml
  */
-public abstract class AbstractListAdapter<T> extends BaseAdapter implements Filterable {
+public abstract class AbstractGridAdapter<T> extends BaseAdapter implements Filterable {
 
-    private static Logger LOG = Logger.getLogger(AbstractListAdapter.class);
+    private static Logger LOG = Logger.getLogger(AbstractGridAdapter.class);
 
     private final Context context;
     private final int viewItemId;
@@ -70,7 +80,7 @@ public abstract class AbstractListAdapter<T> extends BaseAdapter implements Filt
     protected Set<T> checked;
     protected List<T> visualList;
 
-    private AbstractListAdapter(Context context,
+    private AbstractGridAdapter(Context context,
                                 int viewItemId,
                                 List<T> list,
                                 Set<T> checked) {
@@ -87,11 +97,11 @@ public abstract class AbstractListAdapter<T> extends BaseAdapter implements Filt
         this.visualList = list;
     }
 
-    public AbstractListAdapter(Context context, int viewItemId, List<T> list) {
+    public AbstractGridAdapter(Context context, int viewItemId, List<T> list) {
         this(context, viewItemId, list, new HashSet<T>());
     }
 
-    public AbstractListAdapter(Context context, int viewItemId) {
+    public AbstractGridAdapter(Context context, int viewItemId) {
         this(context, viewItemId, new ArrayList<T>(), new HashSet<T>());
     }
 
@@ -284,7 +294,6 @@ public abstract class AbstractListAdapter<T> extends BaseAdapter implements Filt
      * <p/>
      * It will also bind the data to the view, you can refer to it if you need it by doing a .getTag()
      */
-    //todo change to customizable views?
     public View getView(int position, View view, ViewGroup parent) {
         T item = getItem(position);
         Context ctx = getContext();
@@ -573,10 +582,10 @@ public abstract class AbstractListAdapter<T> extends BaseAdapter implements Filt
 
     private final class AbstractListAdapterFilter extends Filter {
 
-        private final AbstractListAdapter<T> adapter;
+        private final AbstractGridAdapter<T> adapter;
         private final ListAdapterFilter<T> filter;
 
-        AbstractListAdapterFilter(AbstractListAdapter<T> adapter, ListAdapterFilter<T> filter) {
+        AbstractListAdapterFilter(AbstractGridAdapter<T> adapter, ListAdapterFilter<T> filter) {
             this.adapter = adapter;
             this.filter = filter;
         }

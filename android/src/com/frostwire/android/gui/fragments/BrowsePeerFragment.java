@@ -29,6 +29,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
+import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.TextView;
@@ -42,6 +44,7 @@ import com.frostwire.android.core.FileDescriptor;
 import com.frostwire.android.gui.Finger;
 import com.frostwire.android.gui.Librarian;
 import com.frostwire.android.gui.Peer;
+import com.frostwire.android.gui.adapters.menu.FileGridAdapter;
 import com.frostwire.android.gui.adapters.menu.FileListAdapter;
 import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.AbstractFragment;
@@ -65,9 +68,14 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     private static final int LOADER_FILES_ID = 0;
     private final BroadcastReceiver broadcastReceiver;
     private BrowsePeerSearchBarView filesBar;
-    private SwipeRefreshLayout swipeRefresh;
+    private SwipeRefreshLayout swipeRefreshList;
+    private SwipeRefreshLayout swipeRefreshGrid;
     private ListView list;
+    private int displayMode; // 0 - list //1 - grid
+    private byte currentFileType;
     private FileListAdapter adapter;
+    private GridView grid;
+    private FileGridAdapter gridAdapter;
     private Peer peer;
     private View header;
     private long lastAdapterRefresh;
@@ -90,6 +98,14 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     private final SparseArray<Byte> toTheLeftOf = new SparseArray<>(6);
     private final Map<Byte, RadioButton> radioButtonFileTypeMap;
 
+    private boolean isOnAFileTypeWithAlternativeDisplay(){
+        return isFileTypeWithAlternativeDisplay(currentFileType);
+    }
+
+    private boolean isFileTypeWithAlternativeDisplay(byte fileType) {
+        return (Constants.FILE_TYPE_PICTURES == fileType || Constants.FILE_TYPE_VIDEOS == fileType);
+    }
+    
     public BrowsePeerFragment() {
         super(R.layout.fragment_browse_peer);
         broadcastReceiver = new LocalBroadcastReceiver();
@@ -138,8 +154,8 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
         }
 
         updateHeader();
-        if (swipeRefresh != null) {
-            swipeRefresh.setRefreshing(false);
+        if (swipeRefreshList != null) {
+            swipeRefreshList.setRefreshing(false);
         }
     }
 
@@ -152,6 +168,7 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
         super.onResume();
         initBroadcastReceiver();
 
+        //todo advanced logic
         if (adapter != null) {
             restorePreviouslyChecked();
             restorePreviousFilter();
@@ -161,6 +178,7 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     }
 
     private void restorePreviouslyChecked() {
+        //todo gridAdapter
         if (previouslyChecked != null && !previouslyChecked.isEmpty()) {
             adapter.setChecked(previouslyChecked);
         }
@@ -173,6 +191,7 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     }
 
     private void savePreviouslyCheckedFileDescriptors() {
+        //todo grid logic
         if (adapter != null) {
             final Set<FileListAdapter.FileDescriptorItem> checked = adapter.getChecked();
             if (checked != null && !checked.isEmpty()) {
@@ -234,6 +253,7 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     protected void initComponents(View v) {
         filesBar = findView(v, R.id.fragment_browse_peer_files_bar);
         filesBar.setOnActionListener(new OnActionListener() {
+            //todo grid logic
             public void onCheckAll(View v, boolean isChecked) {
                 if (adapter != null) {
                     if (isChecked) {
@@ -242,11 +262,21 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
                         adapter.clearChecked();
                     }
                 }
+                if (gridAdapter != null) {
+                    if (isChecked) {
+                        gridAdapter.checkAll();
+                    } else {
+                        gridAdapter.clearChecked();
+                    }
+                }
             }
 
             public void onFilter(View v, String str) {
                 if (adapter != null) {
                     adapter.getFilter().filter(str);
+                }
+                if (gridAdapter != null) {
+                    gridAdapter.getFilter().filter(str);
                 }
             }
 
@@ -256,21 +286,33 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
             }
         });
 
-        swipeRefresh = findView(v, R.id.fragment_browse_peer_swipe_refresh);
-        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        swipeRefreshList = findView(v, R.id.fragment_browse_peer_swipe_refresh);
+        swipeRefreshGrid = findView(v, R.id.fragment_browse_peer_swipe_refresh_grid);
+
+        SwipeRefreshLayout.OnRefreshListener refreshListener = new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 long now = SystemClock.elapsedRealtime();
                 if ((now - lastAdapterRefresh) > 5000) {
                     refreshSelection();
                 } else {
-                    swipeRefresh.setRefreshing(false);
+                    swipeRefreshList.setRefreshing(false);
+                    swipeRefreshGrid.setRefreshing(false);
                 }
             }
-        });
+        };
+
+
+        swipeRefreshList.setOnRefreshListener(refreshListener);
+        swipeRefreshGrid.setOnRefreshListener(refreshListener);
+
         list = findView(v, R.id.fragment_browse_peer_list);
+        grid = findView(v, R.id.fragment_browse_peer_grid);
+
         SwipeLayout swipe = findView(v, R.id.fragment_browse_peer_swipe);
-        swipe.setOnSwipeListener(new SwipeLayout.OnSwipeListener() {
+        SwipeLayout swipeGrid = findView(v, R.id.fragment_browse_peer_swipe_grid);
+
+        SwipeLayout.OnSwipeListener onSwipeListener = new SwipeLayout.OnSwipeListener() {
             @Override
             public void onSwipeLeft() {
                 switchToThe(true);
@@ -280,7 +322,10 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
             public void onSwipeRight() {
                 switchToThe(false);
             }
-        });
+        };
+
+        swipe.setOnSwipeListener(onSwipeListener);
+        swipeGrid.setOnSwipeListener(onSwipeListener);
 
         initRadioButton(v, R.id.fragment_browse_peer_radio_audio, Constants.FILE_TYPE_AUDIO);
         initRadioButton(v, R.id.fragment_browse_peer_radio_ringtones, Constants.FILE_TYPE_RINGTONES);
@@ -291,7 +336,10 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     }
 
     private void updateCheckAllStatusInSearchBar() {
-        if (adapter != null && filesBar != null) {
+        if ( displayMode == 1 && gridAdapter!=null && filesBar !=null ) {
+            //if we would allow to display ringtones in grid
+            filesBar.setCheckAllVisible(gridAdapter.getFileType() != Constants.FILE_TYPE_RINGTONES);
+        } else if (adapter != null && filesBar != null) {
             filesBar.setCheckAllVisible(adapter.getFileType() != Constants.FILE_TYPE_RINGTONES);
         }
     }
@@ -314,9 +362,12 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     }
 
     private void browseFilesButtonClick(byte fileType) {
-        if (adapter != null) {
-            savePreviouslyCheckedFileDescriptors();
-            savePreviousFilter();
+        savePreviouslyCheckedFileDescriptors();
+        savePreviousFilter();
+        if (displayMode == 1 && gridAdapter !=null) {
+            saveListViewVisiblePosition(gridAdapter.getFileType());
+            gridAdapter.clear();
+        } else if (adapter != null) {
             saveListViewVisiblePosition(adapter.getFileType());
             adapter.clear();
         }
@@ -365,7 +416,23 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
         Finger finger = peer.finger();
 
         if (header != null) {
-            byte fileType = adapter != null ? adapter.getFileType() : Constants.FILE_TYPE_AUDIO;
+            //button
+
+            ImageButton changeView = findView(header, R.id.view_browse_peer_header_display_option);
+            if(isOnAFileTypeWithAlternativeDisplay()) {
+                changeView.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        displayMode = (displayMode + 1) % 2;
+                        refreshSelection();
+                    }
+                });
+                changeView.setVisibility(View.VISIBLE);
+            } else {
+                changeView.setVisibility(View.GONE);
+            }
+            //todo grid logic
+            byte fileType = currentFileType;
             int numTotal = 0;
             switch (fileType) {
                 case Constants.FILE_TYPE_TORRENTS:
@@ -397,7 +464,10 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
             total.setText("(" + String.valueOf(numTotal) + ")");
         }
 
-        if (adapter == null) {
+        //setup if first
+        if (displayMode == 1 && gridAdapter == null && isOnAFileTypeWithAlternativeDisplay()) {
+            browseFilesButtonClick(Constants.FILE_TYPE_AUDIO);
+        } else if (adapter == null) {
             browseFilesButtonClick(Constants.FILE_TYPE_AUDIO);
         }
 
@@ -407,7 +477,11 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     }
 
     private void restoreListViewScrollPosition() {
-        if (adapter != null) {
+        if ( displayMode == 1 && isOnAFileTypeWithAlternativeDisplay() && gridAdapter != null){
+            int savedListViewVisiblePosition = getSavedListViewVisiblePosition(gridAdapter.getFileType());
+            savedListViewVisiblePosition = (savedListViewVisiblePosition > 0) ? savedListViewVisiblePosition + 1 : 0;
+            grid.setSelection(savedListViewVisiblePosition);
+        } else if (adapter != null) {
             int savedListViewVisiblePosition = getSavedListViewVisiblePosition(adapter.getFileType());
             savedListViewVisiblePosition = (savedListViewVisiblePosition > 0) ? savedListViewVisiblePosition + 1 : 0;
             list.setSelection(savedListViewVisiblePosition);
@@ -423,29 +497,58 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
         try {
             byte fileType = (Byte) data[0];
 
+            currentFileType = fileType;
             @SuppressWarnings("unchecked")
             List<FileDescriptor> items = (List<FileDescriptor>) data[1];
-            adapter = new FileListAdapter(getActivity(), items, fileType) {
-
-                @Override
-                protected void onItemChecked(CompoundButton v, boolean isChecked) {
-                    if (!isChecked) {
-                        filesBar.clearCheckAll();
+            if ( displayMode == 1 && isOnAFileTypeWithAlternativeDisplay() ) {
+                gridAdapter = new FileGridAdapter(getActivity(), items, fileType) {
+                    @Override
+                    protected void onItemChecked(CompoundButton v, boolean isChecked) {
+                        if (!isChecked) {
+                            filesBar.clearCheckAll();
+                        }
+                        super.onItemChecked(v, isChecked);
                     }
-                    super.onItemChecked(v, isChecked);
-                }
 
-                @Override
-                protected void onLocalPlay() {
-                    if (adapter != null) {
-                        saveListViewVisiblePosition(adapter.getFileType());
+                    @Override
+                    protected void onLocalPlay() {
+                        if (gridAdapter != null) {
+                            saveListViewVisiblePosition(currentFileType);
+                        }
                     }
-                }
-            };
+                };
+            } else {
+                adapter = new FileListAdapter(getActivity(), items, fileType) {
+
+                    @Override
+                    protected void onItemChecked(CompoundButton v, boolean isChecked) {
+                        if (!isChecked) {
+                            filesBar.clearCheckAll();
+                        }
+                        super.onItemChecked(v, isChecked);
+                    }
+
+                    @Override
+                    protected void onLocalPlay() {
+                        if (adapter != null) {
+                            saveListViewVisiblePosition(currentFileType);
+                        }
+                    }
+                };
+            }
+
             restorePreviouslyChecked();
             restorePreviousFilter();
-            list.setAdapter(adapter);
 
+            if(displayMode == 0 || !isOnAFileTypeWithAlternativeDisplay()){
+                grid.setVisibility(View.GONE);
+                list.setAdapter(adapter);
+                list.setVisibility(View.VISIBLE);
+            } else {
+                grid.setAdapter(gridAdapter);
+                grid.setVisibility(View.VISIBLE);
+                list.setVisibility(View.GONE);
+            }
         } catch (Throwable e) {
             LOG.error("Error updating files in list", e);
         }
@@ -466,12 +569,33 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     }
 
     private void switchToThe(boolean right) {
-        if (adapter == null) {
-            return;
-        }
-        final byte currentFileType = adapter.getFileType();
+//        final byte currentFileType;
+//        if (displayMode == 1 && isOnAFileTypeWithAlternativeDisplay()) {
+//            if(gridAdapter == null) {
+//                return;
+//            }
+//            currentFileType =  gridAdapter.getFileType();
+//        } else {
+//            if (adapter == null) {
+//                return;
+//            }
+//            currentFileType = adapter.getFileType();
+//        }
         final byte nextFileType = (right) ? toTheRightOf.get(currentFileType) : toTheLeftOf.get(currentFileType);
         changeSelectedRadioButton(currentFileType, nextFileType);
+        ImageButton changeView = findView(header, R.id.view_browse_peer_header_display_option);
+        if(isFileTypeWithAlternativeDisplay(nextFileType)) {
+            changeView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    displayMode = (displayMode + 1) % 2;
+                    refreshSelection();
+                }
+            });
+            changeView.setVisibility(View.VISIBLE);
+        } else {
+            changeView.setVisibility(View.GONE);
+        }
     }
 
     private void changeSelectedRadioButton(byte currentFileType, byte nextFileType) {
@@ -523,7 +647,10 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
                     action.equals(MusicPlaybackService.META_CHANGED) ||
                     action.equals(MusicPlaybackService.SIMPLE_PLAYSTATE_STOPPED)
                     ) {
-                if (adapter != null) {
+                //grid adapter
+                if (gridAdapter != null && isOnAFileTypeWithAlternativeDisplay() && displayMode == 1) {
+                    gridAdapter.notifyDataSetChanged();
+                } else if (adapter != null) {
                     adapter.notifyDataSetChanged();
                 }
             }
@@ -545,9 +672,12 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     }
 
     private void refreshSelection() {
-        if (adapter != null) {
+        if (displayMode == 1 && isOnAFileTypeWithAlternativeDisplay() && gridAdapter!=null) {
             lastAdapterRefresh = SystemClock.elapsedRealtime();
-            browseFilesButtonClick(adapter.getFileType());
+            browseFilesButtonClick(currentFileType);
+        } else if (adapter != null) {
+            lastAdapterRefresh = SystemClock.elapsedRealtime();
+            browseFilesButtonClick(currentFileType);
         }
     }
 }
