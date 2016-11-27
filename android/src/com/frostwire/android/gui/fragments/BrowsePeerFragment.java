@@ -157,6 +157,9 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
         if (swipeRefreshList != null) {
             swipeRefreshList.setRefreshing(false);
         }
+        if( swipeRefreshGrid != null) {
+            swipeRefreshGrid.setRefreshing(false);
+        }
     }
 
     @Override
