@@ -75,6 +75,7 @@ import java.util.Map.Entry;
  * @author gubatron
  * @author aldenml
  */
+//todo CLEANUP!!!
 public class FileGridAdapter extends AbstractListAdapter<FileDescriptorItem> {
 
     private static final Logger LOG = Logger.getLogger(FileGridAdapter.class);
@@ -83,6 +84,7 @@ public class FileGridAdapter extends AbstractListAdapter<FileDescriptorItem> {
 
     private final ImageLoader thumbnailLoader;
     private final DownloadButtonClickListener downloadButtonClickListener;
+    private final ViewOnLongClickListener viewOnLongClickListener;
 
     protected FileGridAdapter(Context context, List<FileDescriptor> files, byte fileType) {
         super(context, getViewItemId(fileType), convertFiles(files));
@@ -94,6 +96,7 @@ public class FileGridAdapter extends AbstractListAdapter<FileDescriptorItem> {
         this.fileType = fileType;
         this.thumbnailLoader = ImageLoader.getInstance(context);
         this.downloadButtonClickListener = new DownloadButtonClickListener();
+        this.viewOnLongClickListener = new ViewOnLongClickListener();
 
         checkSDStatus();
         setCheckboxesVisibility(fileType != Constants.FILE_TYPE_RINGTONES);
@@ -210,37 +213,42 @@ public class FileGridAdapter extends AbstractListAdapter<FileDescriptorItem> {
             return;
         }
 
+
         onLocalPlay();
         Context ctx = getContext();
 
         ensureCorrectMimeType(fd);
 
-        if (fd.mime != null && fd.mime.contains("audio")) {
-            if (fd.equals(Engine.instance().getMediaPlayer().getCurrentFD())) {
-                Engine.instance().getMediaPlayer().stop();
-            } else {
-                try {
-                    UIUtils.playEphemeralPlaylist(fd);
-                    UXStats.instance().log(UXAction.LIBRARY_PLAY_AUDIO_FROM_FILE);
-                } catch (RuntimeException re) {
-                    UIUtils.showShortMessage(ctx, R.string.media_player_failed);
-                }
-            }
-            notifyDataSetChanged();
-        } else {
-            if (fd.filePath != null && fd.mime != null) {
-                //special treatment of ringtones
-                if (fd.fileType == Constants.FILE_TYPE_RINGTONES) {
-                    playRingtone(fd);
-                } else {
-                    UIUtils.openFile(ctx, fd.filePath, fd.mime);
-                }
-            } else {
-                // it will automatically remove the 'Open' entry.
-                new MenuBuilder(getMenuAdapter(view)).show();
-                UIUtils.showShortMessage(ctx, R.string.cant_open_file);
-            }
-        }
+
+//todo do it gracefully
+        new MenuBuilder(getMenuAdapter(view)).show();
+
+//        if (fd.mime != null && fd.mime.contains("audio")) {
+//            if (fd.equals(Engine.instance().getMediaPlayer().getCurrentFD())) {
+//                Engine.instance().getMediaPlayer().stop();
+//            } else {
+//                try {
+//                    UIUtils.playEphemeralPlaylist(fd);
+//                    UXStats.instance().log(UXAction.LIBRARY_PLAY_AUDIO_FROM_FILE);
+//                } catch (RuntimeException re) {
+//                    UIUtils.showShortMessage(ctx, R.string.media_player_failed);
+//                }
+//            }
+//            notifyDataSetChanged();
+//        } else {
+//            if (fd.filePath != null && fd.mime != null) {
+//                //special treatment of ringtones
+//                if (fd.fileType == Constants.FILE_TYPE_RINGTONES) {
+//                    playRingtone(fd);
+//                } else {
+//                    UIUtils.openFile(ctx, fd.filePath, fd.mime);
+//                }
+//            } else {
+//                // it will automatically remove the 'Open' entry.
+//                new MenuBuilder(getMenuAdapter(view)).show();
+//                UIUtils.showShortMessage(ctx, R.string.cant_open_file);
+//            }
+//        }
     }
 
     private void playRingtone(FileDescriptor fileDescriptor) {
@@ -276,13 +284,11 @@ public class FileGridAdapter extends AbstractListAdapter<FileDescriptorItem> {
 
         try {
             initTouchFeedback(view, item);
-            initCheckBox(view, item);
+            setCheckState(view, item);
             initRadioButton(view, item, position);//todo see
             //populateView(view, item);
             tempPopulate(view, item);
-
 //
-
         } catch (Throwable e) {
             LOG.error("Fatal error getting view: " + e.getMessage(), e);
         }
@@ -290,6 +296,23 @@ public class FileGridAdapter extends AbstractListAdapter<FileDescriptorItem> {
         return view;
     }
 
+    private void setCheckState(View view, FileDescriptorItem item) {
+        ImageView check = findView(view, R.id.view_selectable_grid_item_check_overlay);
+        if (getChecked().size() > 0) {
+            check.setVisibility(View.VISIBLE);
+            if(getChecked().contains(item)){
+                check.setImageResource(R.drawable.checkbox_button_selector_on);
+            } else {
+                check.setImageResource(R.drawable.checkbox_button_selector_on_disabled_light);
+            }
+        } else {
+            check.setVisibility(View.GONE);
+        }
+
+    }
+
+
+    //todo finish (better image sizes)
     private void tempPopulate(View view, FileDescriptorItem item) {
         FileDescriptor fd = item.fd;
 
@@ -329,8 +352,9 @@ public class FileGridAdapter extends AbstractListAdapter<FileDescriptorItem> {
             }
         }
 
-        fileThumbnail.setTag(fd);
+        fileThumbnail.setTag(item);
         fileThumbnail.setOnClickListener(downloadButtonClickListener);
+        fileThumbnail.setOnLongClickListener(viewOnLongClickListener);
     }
 
     private void populateSDState(View v, FileDescriptorItem item) {
@@ -375,11 +399,6 @@ public class FileGridAdapter extends AbstractListAdapter<FileDescriptorItem> {
         title.setTextColor(res.getColor(R.color.browse_peer_listview_item_inactive_foreground));
         text.setTextColor(res.getColor(R.color.browse_peer_listview_item_inactive_foreground));
         size.setTextColor(res.getColor(R.color.browse_peer_listview_item_inactive_foreground));
-    }
-
-    private void populateContainerAction(View view) {
-        ImageButton preview = findView(view, R.id.view_browse_peer_list_item_button_preview);
-        preview.setVisibility(View.GONE);
     }
 
     private boolean showSingleOptions(List<FileDescriptor> checked, FileDescriptor fd) {
@@ -555,7 +574,7 @@ public class FileGridAdapter extends AbstractListAdapter<FileDescriptorItem> {
     //todo move to AbstractFileAdapter
     private final class DownloadButtonClickListener implements OnClickListener {
         public void onClick(View v) {
-            FileDescriptor fd = (FileDescriptor) v.getTag();
+            FileDescriptor fd = ((FileDescriptorItem) v.getTag()).fd;
 
             if (fd == null) {
                 return;
@@ -566,6 +585,19 @@ public class FileGridAdapter extends AbstractListAdapter<FileDescriptorItem> {
             }
 
             localPlay(fd, v);
+        }
+    }
+
+    private final class ViewOnLongClickListener implements View.OnLongClickListener {
+        public boolean onLongClick(View v) {
+            FileDescriptorItem fdi = (FileDescriptorItem) v.getTag();
+            if(getChecked().contains(fdi)){
+                getChecked().remove(fdi);
+            } else {
+                getChecked().add(fdi);
+            }
+            notifyDataSetChanged();
+            return true;
         }
     }
 

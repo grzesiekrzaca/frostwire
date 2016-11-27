@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.frostwire.android.gui.views.SquareRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/view_selectable_grid_item_base"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-        <LinearLayout
+        <com.frostwire.android.gui.views.SquareLinearLayout
             android:id="@+id/view_selectable_grid_item_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal" />
 
-        <CheckBox
-            android:id="@+id/view_selectable_list_item_checkbox"
-            android:layout_width="32dip"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentRight="true"
-            android:background="@null"
-            android:visibility="visible"
-         />
 
-</RelativeLayout>
+    <com.frostwire.android.gui.views.OverlayImageView
+        android:id="@+id/view_selectable_grid_item_check_overlay"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_alignParentTop="true"
+        android:visibility="visible"
+        android:clickable="false"
+        android:focusable="false"
+        android:scaleType="center"
+        android:src="@drawable/checkbox_button_selector_on"
+        />
+
+
+</com.frostwire.android.gui.views.SquareRelativeLayout>
