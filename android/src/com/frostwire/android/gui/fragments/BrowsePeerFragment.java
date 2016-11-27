@@ -154,6 +154,7 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
         }
 
         updateHeader();
+
         if (swipeRefreshList != null) {
             swipeRefreshList.setRefreshing(false);
         }
@@ -193,22 +194,23 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
 
     private void savePreviouslyCheckedFileDescriptors() {
 
-        //todo simplify
-        if (gridAdapter != null) {
-            final Set<FileListAdapter.FileDescriptorItem> checked = gridAdapter.getChecked();
-            if (checked != null && !checked.isEmpty()) {
-                previouslyChecked = new HashSet<>(checked);
-            } else {
-                previouslyChecked = null;
+        if(isOnAFileTypeWithAlternativeDisplay()) {
+            if (gridAdapter != null) {
+                final Set<FileListAdapter.FileDescriptorItem> checked = gridAdapter.getChecked();
+                if (checked != null && !checked.isEmpty()) {
+                    previouslyChecked = new HashSet<>(checked);
+                } else {
+                    previouslyChecked = null;
+                }
             }
-        }
-
-        if (adapter != null) {
-            final Set<FileListAdapter.FileDescriptorItem> checked = adapter.getChecked();
-            if (checked != null && !checked.isEmpty()) {
-                previouslyChecked = new HashSet<>(checked);
-            } else {
-                previouslyChecked = null;
+        } else {
+            if (adapter != null) {
+                final Set<FileListAdapter.FileDescriptorItem> checked = adapter.getChecked();
+                if (checked != null && !checked.isEmpty()) {
+                    previouslyChecked = new HashSet<>(checked);
+                } else {
+                    previouslyChecked = null;
+                }
             }
         }
     }
@@ -465,9 +467,7 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
         }
 
         //setup if first
-        if (gridAdapter == null && isOnAFileTypeWithAlternativeDisplay()) {
-            browseFilesButtonClick(Constants.FILE_TYPE_AUDIO);
-        } else if (adapter == null) {
+        if (adapter == null) {
             browseFilesButtonClick(Constants.FILE_TYPE_AUDIO);
         }
 
@@ -477,13 +477,11 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     }
 
     private void restoreListViewScrollPosition() {
+        int savedListViewVisiblePosition = getSavedListViewVisiblePosition(currentFileType);
+        savedListViewVisiblePosition = (savedListViewVisiblePosition > 0) ? savedListViewVisiblePosition + 1 : 0;
         if (isOnAFileTypeWithAlternativeDisplay() && gridAdapter != null) {
-            int savedListViewVisiblePosition = getSavedListViewVisiblePosition(gridAdapter.getFileType());
-            savedListViewVisiblePosition = (savedListViewVisiblePosition > 0) ? savedListViewVisiblePosition + 1 : 0;
             grid.setSelection(savedListViewVisiblePosition);
         } else if (adapter != null) {
-            int savedListViewVisiblePosition = getSavedListViewVisiblePosition(adapter.getFileType());
-            savedListViewVisiblePosition = (savedListViewVisiblePosition > 0) ? savedListViewVisiblePosition + 1 : 0;
             list.setSelection(savedListViewVisiblePosition);
         }
     }
