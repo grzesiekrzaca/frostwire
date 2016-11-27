@@ -30,7 +30,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
 import android.widget.GridView;
-import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.TextView;
@@ -169,19 +168,17 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
         super.onResume();
         initBroadcastReceiver();
 
-        //todo advanced logic
-        if (adapter != null) {
-            restorePreviouslyChecked();
-            restorePreviousFilter();
-            browseFilesButtonClick(adapter.getFileType());
-        }
+        restorePreviouslyChecked();
+        restorePreviousFilter();
+        browseFilesButtonClick(currentFileType);
+
         updateHeader();
     }
 
     private void restorePreviouslyChecked() {
-        //todo gridAdapter
         if (previouslyChecked != null && !previouslyChecked.isEmpty()) {
             adapter.setChecked(previouslyChecked);
+            gridAdapter.setChecked(previouslyChecked);
         }
     }
 
@@ -192,7 +189,17 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     }
 
     private void savePreviouslyCheckedFileDescriptors() {
-        //todo grid logic
+
+        //todo simplify
+        if (gridAdapter != null) {
+            final Set<FileListAdapter.FileDescriptorItem> checked = gridAdapter.getChecked();
+            if (checked != null && !checked.isEmpty()) {
+                previouslyChecked = new HashSet<>(checked);
+            } else {
+                previouslyChecked = null;
+            }
+        }
+
         if (adapter != null) {
             final Set<FileListAdapter.FileDescriptorItem> checked = adapter.getChecked();
             if (checked != null && !checked.isEmpty()) {
@@ -254,7 +261,6 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
     protected void initComponents(View v) {
         filesBar = findView(v, R.id.fragment_browse_peer_files_bar);
         filesBar.setOnActionListener(new OnActionListener() {
-            //todo grid logic
             public void onCheckAll(View v, boolean isChecked) {
                 if (adapter != null) {
                     if (isChecked) {
@@ -370,10 +376,10 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
         savePreviouslyCheckedFileDescriptors();
         savePreviousFilter();
         if (isOnAFileTypeWithAlternativeDisplay() && gridAdapter !=null) {
-            saveListViewVisiblePosition(gridAdapter.getFileType());
+            saveFirstVisiblePosition(gridAdapter.getFileType());
             gridAdapter.clear();
         } else if (adapter != null) {
-            saveListViewVisiblePosition(adapter.getFileType());
+            saveFirstVisiblePosition(adapter.getFileType());
             adapter.clear();
         }
         filesBar.clearCheckAll();
@@ -502,7 +508,7 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
                     @Override
                     protected void onLocalPlay() {
                         if (gridAdapter != null) {
-                            saveListViewVisiblePosition(currentFileType);
+                            saveFirstVisiblePosition(currentFileType);
                         }
                     }
                 };
@@ -520,7 +526,7 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
                     @Override
                     protected void onLocalPlay() {
                         if (adapter != null) {
-                            saveListViewVisiblePosition(currentFileType);
+                            saveFirstVisiblePosition(currentFileType);
                         }
                     }
                 };
@@ -543,8 +549,13 @@ public class BrowsePeerFragment extends AbstractFragment implements LoaderCallba
         }
     }
 
-    private void saveListViewVisiblePosition(byte fileType) {
-        int firstVisiblePosition = list.getFirstVisiblePosition();
+    private void saveFirstVisiblePosition(byte fileType) {
+        int firstVisiblePosition;
+        if(isOnAFileTypeWithAlternativeDisplay()) {
+            firstVisiblePosition = grid.getFirstVisiblePosition();
+        } else {
+            firstVisiblePosition = list.getFirstVisiblePosition();
+        }
         ConfigurationManager.instance().setInt(Constants.BROWSE_PEER_FRAGMENT_LISTVIEW_FIRST_VISIBLE_POSITION + fileType, firstVisiblePosition);
     }
 
