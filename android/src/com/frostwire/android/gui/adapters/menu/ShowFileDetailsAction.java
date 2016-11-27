@@ -55,7 +55,7 @@ public class ShowFileDetailsAction extends MenuAction {
         public static DetailsMenuActionDialog newInstance(String filePath, long size) {
             DetailsMenuActionDialog dialog = new DetailsMenuActionDialog();
             Bundle bundle = new Bundle();
-            bundle.putString(FILE_PATH,filePath);
+            bundle.putString(FILE_PATH, filePath);
             bundle.putLong(FILE_SIZE, size);
             dialog.setArguments(bundle);
             return dialog;
@@ -101,25 +101,25 @@ public class ShowFileDetailsAction extends MenuAction {
 
                 int length = exif.getAttributeInt(ExifInterface.TAG_IMAGE_LENGTH, 0);
                 int width = exif.getAttributeInt(ExifInterface.TAG_IMAGE_WIDTH, 0);
-                if(length >0 && width > 0) {
+                if (length > 0 && width > 0) {
                     int imageOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 0);
-                    if(imageOrientation == ExifInterface.ORIENTATION_ROTATE_90 || imageOrientation == ExifInterface.ORIENTATION_ROTATE_270){
+                    if (imageOrientation == ExifInterface.ORIENTATION_ROTATE_90 || imageOrientation == ExifInterface.ORIENTATION_ROTATE_270) {
                         //portrait lxw
                         sb.append("\n").append(length).append(" x ").append(width);
-                    } else if(imageOrientation != ExifInterface.ORIENTATION_UNDEFINED) {
+                    } else if (imageOrientation != ExifInterface.ORIENTATION_UNDEFINED) {
                         //landscape wxl
                         sb.append("\n").append(width).append(" x ").append(length);
                     } //undefined is ignored
                 }
 
-                if(!StringUtils.isNullOrEmpty(exif.getAttribute(ExifInterface.TAG_ISO))) {
+                if (!StringUtils.isNullOrEmpty(exif.getAttribute(ExifInterface.TAG_ISO))) {
                     sb.append("\n").append(exif.getAttribute(ExifInterface.TAG_ISO));
                 }
-                if(!StringUtils.isNullOrEmpty(exif.getAttribute(ExifInterface.TAG_APERTURE))) {
+                if (!StringUtils.isNullOrEmpty(exif.getAttribute(ExifInterface.TAG_APERTURE))) {
                     sb.append("\n").append(exif.getAttribute(ExifInterface.TAG_APERTURE));
                 }
 
-                if(!StringUtils.isNullOrEmpty(exif.getAttribute(ExifInterface.TAG_DATETIME))) {
+                if (!StringUtils.isNullOrEmpty(exif.getAttribute(ExifInterface.TAG_DATETIME))) {
                     sb.append("\n").append(exif.getAttribute(ExifInterface.TAG_DATETIME));
                 }
 
