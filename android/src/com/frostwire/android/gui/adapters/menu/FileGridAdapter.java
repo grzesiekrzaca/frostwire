@@ -177,6 +177,11 @@ public class FileGridAdapter extends AbstractListAdapter<FileDescriptorItem> {
                         readInfoFromTorrent(fd.filePath, false)
                 ));
             }
+
+            if(numChecked <= 1) {
+                items.add(0, new ShowFileDetailsAction(context, fd));
+            }
+
         }
 
         List<FileDescriptor> list = checked;

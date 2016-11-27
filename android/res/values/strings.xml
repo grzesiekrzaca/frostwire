@@ -81,6 +81,7 @@
     <string name="me">Me</string>
     <string name="delete">Delete</string>
     <string name="rename">Rename</string>
+    <string name="details">Details</string>
     <string name="download">Download</string>
     <string name="download_selected_files">Download Selected</string>
     <string name="toggle_sharing_selected_files">Toggle Sharing</string>
