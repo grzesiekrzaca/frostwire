@@ -20,17 +20,22 @@ package com.frostwire.android.gui.activities;
 
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 
+import com.frostwire.android.AndroidPlatform;
 import com.frostwire.android.R;
+import com.frostwire.android.StoragePicker;
 import com.frostwire.android.core.ConfigurationManager;
 import com.frostwire.android.core.Constants;
 import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.AbstractActivity2;
+import com.frostwire.android.gui.views.preference.StoragePreference;
 import com.frostwire.android.gui.views.preference.NumberPickerPreference;
 import com.frostwire.bittorrent.BTEngine;
 
@@ -41,7 +46,6 @@ import com.frostwire.bittorrent.BTEngine;
  */
 public final class SettingsActivity2 extends AbstractActivity2
         implements PreferenceFragment.OnPreferenceStartFragmentCallback {
-
     /**
      * When starting this activity, the invoking Intent can contain this extra
      * string to specify which fragment should be initially displayed.
@@ -66,9 +70,21 @@ public final class SettingsActivity2 extends AbstractActivity2
     public static final String EXTRA_SHOW_FRAGMENT_TITLE =
             PreferenceActivity.EXTRA_SHOW_FRAGMENT_TITLE;
 
+    /**
+     * When starting this activity and using {@link #EXTRA_SHOW_FRAGMENT},
+     * this argument key can be used to specify which preference (dialog) should be opened
+     * it should be inside the Bundle passed with {@link #EXTRA_SHOW_FRAGMENT_ARGUMENTS}
+     */
+    public static final String EXTRA_SHOW_FRAGMENT_ARGUMENT_OPEN_PREFERENCE = "OpenPreference";
+
     // keep this field as a starting point to support multipane settings in tablet
     // see PreferenceFragment source code
     private final boolean singlePane;
+
+    private PreferenceFragment currentFragment;
+
+    //this is used while we have both the settings options in the application, set to true to use new settings, default false
+    public static final boolean USE_NEW_SETTINGS_FOR_EXTERNAL_CALLS = false;
 
     public SettingsActivity2() {
         super(R.layout.activity_settings);
@@ -132,18 +148,97 @@ public final class SettingsActivity2 extends AbstractActivity2
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         transaction.replace(R.id.activity_settings_content, f);
         transaction.commitAllowingStateLoss();
-
+        currentFragment = (PreferenceFragment) f;
         if (titleRes != 0) {
             setTitle(titleRes);
         }
     }
 
+    public Preference findPreference(String key) {
+        return currentFragment != null ? currentFragment.findPreference(key) : null;
+    }
+
+    //this is used when SAF-version preference button is pressed (ie. storage picker is run form intent in preference definition)
+    @Override
+    public void startActivity(Intent intent) {
+        if (intent != null && StoragePicker.ACTION_OPEN_DOCUMENT_TREE.equals(intent.getAction())) {
+            StoragePicker.show(this);
+        } else {
+            super.startActivity(intent);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == StoragePicker.SELECT_FOLDER_REQUEST_CODE) {
+            if (currentFragment instanceof Application) {
+                ((Application) currentFragment).storagePickerFinished(this, requestCode, resultCode, data);
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
     public static class Application extends PreferenceFragment {
+        public static final String STORAGE = "Storage";
+
+        Preference activeStoragePreference;
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.settings_application);
         }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            setupStorageOption();
+
+            if (getArguments() != null) {
+                String preferenceToOpen = getArguments().getString(SettingsActivity2.EXTRA_SHOW_FRAGMENT_ARGUMENT_OPEN_PREFERENCE);
+                if (STORAGE.equals(preferenceToOpen)) {
+                    getArguments().putString(SettingsActivity2.EXTRA_SHOW_FRAGMENT_ARGUMENT_OPEN_PREFERENCE, null);
+                    StoragePreference.invokeStoragePreference2(getActivity()); //this method can handle both SAF and non-SAF
+                }
+            }
+        }
+
+        private void setupStorageOption() {
+            // intentional repetition of preference value here
+            String kitkatKey = "frostwire.prefs.storage.path";
+            String lollipopKey = "frostwire.prefs.storage.path_asf";
+            PreferenceCategory category = (PreferenceCategory) findPreference("frostwire.prefs.general");
+            if (AndroidPlatform.saf()) {
+                Preference p = findPreference(kitkatKey);
+                if (p != null) {
+                    category.removePreference(p);
+                }
+                activeStoragePreference = findPreference(lollipopKey);
+            } else {
+                Preference p = findPreference(lollipopKey);
+                if (p != null) {
+                    category.removePreference(p);
+                }
+                activeStoragePreference = findPreference(kitkatKey);
+            }
+            if (activeStoragePreference != null) {
+                activeStoragePreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                    @Override
+                    public boolean onPreferenceChange(Preference preference, Object newValue) {
+                        preference.setSummary(newValue.toString());
+                        return true;
+                    }
+                });
+                activeStoragePreference.setSummary(ConfigurationManager.instance().getStoragePath());
+            }
+        }
+
+        protected void storagePickerFinished(Context context, int requestCode, int resultCode, Intent data) {
+            String path = StoragePreference.onDocumentTreeActivityResult(context, requestCode, resultCode, data);
+            activeStoragePreference.setSummary(path);
+        }
+
     }
 
     public static class Search extends PreferenceFragment {

@@ -31,6 +31,7 @@ import android.preference.DialogPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
@@ -39,6 +40,7 @@ import com.frostwire.android.R;
 import com.frostwire.android.core.ConfigurationManager;
 import com.frostwire.android.core.Constants;
 import com.frostwire.android.StoragePicker;
+import com.frostwire.android.gui.activities.SettingsActivity2;
 import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.AbstractAdapter;
 import com.frostwire.android.gui.views.AbstractAdapter.OnItemClickAdapter;
@@ -143,6 +145,18 @@ public class StoragePreference extends DialogPreference {
             StoragePicker.show(activity);
         } else if (activity instanceof PreferenceActivity) {
             final StoragePreference storagePreference = (StoragePreference) ((PreferenceActivity) activity).findPreference(Constants.PREF_KEY_STORAGE_PATH);
+            if (storagePreference != null) {
+                storagePreference.showDialog(null);
+            }
+        }
+    }
+
+    public static void invokeStoragePreference2(Activity activity) {
+        System.out.println("StoragePreference2.invokeStoragePreference: external dirs -> " + SystemUtils.getExternalFilesDirs(activity).length);
+        if (AndroidPlatform.saf()) {
+            StoragePicker.show(activity);
+        } else if (activity instanceof SettingsActivity2) {
+            final StoragePreference storagePreference = (StoragePreference) ((SettingsActivity2) activity).findPreference(Constants.PREF_KEY_STORAGE_PATH);
             if (storagePreference != null) {
                 storagePreference.showDialog(null);
             }

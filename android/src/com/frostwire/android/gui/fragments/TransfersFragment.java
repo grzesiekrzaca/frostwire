@@ -31,12 +31,14 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import android.widget.AdapterView.OnItemClickListener;
+
 import com.frostwire.android.R;
 import com.frostwire.android.core.ConfigurationManager;
 import com.frostwire.android.core.Constants;
 import com.frostwire.android.gui.NetworkManager;
 import com.frostwire.android.gui.activities.MainActivity;
 import com.frostwire.android.gui.activities.SettingsActivity;
+import com.frostwire.android.gui.activities.SettingsActivity2;
 import com.frostwire.android.gui.activities.VPNStatusDetailActivity;
 import com.frostwire.android.gui.adapters.TransferListAdapter;
 import com.frostwire.android.gui.dialogs.HandpickedTorrentDownloadDialogOnFetch;
@@ -332,17 +334,31 @@ public class TransfersFragment extends AbstractFragment implements TimerObserver
 
         textDHTPeers = findView(v, R.id.fragment_transfers_dht_peers);
         textDHTPeers.setVisibility(View.INVISIBLE);
-        textDHTPeers.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Context ctx = v.getContext();
-                Intent i = new Intent(ctx, SettingsActivity.class);
-                if (showTorrentSettingsOnClick) {
-                    i.setAction(Constants.ACTION_SETTINGS_OPEN_TORRENT_SETTINGS);
+        if (SettingsActivity2.USE_NEW_SETTINGS_FOR_EXTERNAL_CALLS) {
+            textDHTPeers.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Context ctx = v.getContext();
+                    Intent i = new Intent(ctx, SettingsActivity2.class);
+                    if (showTorrentSettingsOnClick) {
+                        i.putExtra(SettingsActivity2.EXTRA_SHOW_FRAGMENT, SettingsActivity2.Torrent.class.getName());
+                    }
+                    ctx.startActivity(i);
                 }
-                ctx.startActivity(i);
-            }
-        });
+            });
+        } else {
+            textDHTPeers.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Context ctx = v.getContext();
+                    Intent i = new Intent(ctx, SettingsActivity.class);
+                    if (showTorrentSettingsOnClick) {
+                        i.setAction(Constants.ACTION_SETTINGS_OPEN_TORRENT_SETTINGS);
+                    }
+                    ctx.startActivity(i);
+                }
+            });
+        }
         textDownloads = findView(v, R.id.fragment_transfers_text_downloads);
         textUploads = findView(v, R.id.fragment_transfers_text_uploads);
 
@@ -816,9 +832,18 @@ public class TransfersFragment extends AbstractFragment implements TimerObserver
 
         @Override
         public void onClick(TransfersFragment owner, View v) {
-            Intent i = new Intent(owner.getActivity(), SettingsActivity.class);
-            i.setAction(Constants.ACTION_SETTINGS_SELECT_STORAGE);
-            owner.getActivity().startActivity(i);
+            if (SettingsActivity2.USE_NEW_SETTINGS_FOR_EXTERNAL_CALLS) {
+                Intent i = new Intent(owner.getActivity(), SettingsActivity2.class);
+                i.putExtra(SettingsActivity2.EXTRA_SHOW_FRAGMENT, SettingsActivity2.Application.class.getName());
+                Bundle arguments = new Bundle();
+                arguments.putString(SettingsActivity2.EXTRA_SHOW_FRAGMENT_ARGUMENT_OPEN_PREFERENCE, SettingsActivity2.Application.STORAGE);
+                i.putExtra(SettingsActivity2.EXTRA_SHOW_FRAGMENT_ARGUMENTS, arguments);
+                owner.getActivity().startActivity(i);
+            } else {
+                Intent i = new Intent(owner.getActivity(), SettingsActivity.class);
+                i.setAction(Constants.ACTION_SETTINGS_SELECT_STORAGE);
+                owner.getActivity().startActivity(i);
+            }
         }
     }
 }
