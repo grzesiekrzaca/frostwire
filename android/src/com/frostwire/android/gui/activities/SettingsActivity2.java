@@ -18,6 +18,7 @@
 
 package com.frostwire.android.gui.activities;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
@@ -25,14 +26,20 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.preference.SwitchPreference;
+import android.util.Log;
 
 import com.frostwire.android.R;
 import com.frostwire.android.core.ConfigurationManager;
 import com.frostwire.android.core.Constants;
+import com.frostwire.android.gui.services.Engine;
 import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.AbstractActivity2;
 import com.frostwire.android.gui.views.preference.NumberPickerPreference;
 import com.frostwire.bittorrent.BTEngine;
+import com.frostwire.util.Ref;
+
+import java.lang.ref.WeakReference;
 
 /**
  * @author gubatron
@@ -69,6 +76,8 @@ public final class SettingsActivity2 extends AbstractActivity2
     // keep this field as a starting point to support multipane settings in tablet
     // see PreferenceFragment source code
     private final boolean singlePane;
+
+    private final static long MINIMAL_CONNECTION_SWITCH_TIME_MS = 750;
 
     public SettingsActivity2() {
         super(R.layout.activity_settings);
@@ -139,10 +148,102 @@ public final class SettingsActivity2 extends AbstractActivity2
     }
 
     public static class Application extends PreferenceFragment {
+
+        SwitchPreference connectSwitch;
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.settings_application);
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            setupConnectSwitch();
+        }
+
+        private void setupConnectSwitch() {
+            connectSwitch = (SwitchPreference) findPreference(Constants.PREF_KEY_INTERNAL_CONNECT_DISCONNECT);
+            if (connectSwitch != null) {
+                connectSwitch.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                    @Override
+                    public boolean onPreferenceChange(Preference preference, Object newValue) {
+                        final boolean newStatus = (Boolean) newValue;
+                        if (Engine.instance().isStarted() && !newStatus) {
+                            changeConnectionState(false, R.string.toast_on_disconnect);
+                        } else if (newStatus && (Engine.instance().isStopped() || Engine.instance().isDisconnected())) {
+                            changeConnectionState(true, R.string.toast_on_connect);
+                        }
+                        return true;
+                    }
+                });
+            }
+            updateConnectSwitch();
+        }
+
+        private void changeConnectionState(final boolean newState, final int messageId) {
+            final WeakReference<Activity> context = Ref.weak(getActivity());
+            disableConnectSwitchWhileStateIsChanging();
+            Runnable backgroundTask = new Runnable() {
+                @Override
+                public void run() {
+                    final long startTime = System.currentTimeMillis();
+                    if (newState) {
+                        Engine.instance().startServices();
+                    } else {
+                        Engine.instance().stopServices(true);
+                    }
+                    Runnable post = new Runnable() {
+                        @Override
+                        public void run() {
+                            long elapsedTime = System.currentTimeMillis() - startTime;
+                            if(elapsedTime < MINIMAL_CONNECTION_SWITCH_TIME_MS){//if the operation was very fast mock longer run so that the UI transition is smoother
+                                try {
+                                    Thread.sleep(MINIMAL_CONNECTION_SWITCH_TIME_MS - elapsedTime);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            UIUtils.showShortMessage(context.get(), messageId);
+                            updateConnectSwitch();
+                        }
+                    };
+                    if (Ref.alive(context)) {
+                        context.get().runOnUiThread(post);
+                    }
+                }
+            };
+            Engine.instance().getThreadPool().submit(backgroundTask);
+        }
+
+        private void updateConnectSwitch() {
+            if (connectSwitch != null) {
+                final Preference.OnPreferenceChangeListener onPreferenceChangeListener = connectSwitch.getOnPreferenceChangeListener();
+                connectSwitch.setOnPreferenceChangeListener(null);
+                connectSwitch.setSummary(R.string.bittorrent_network_summary);
+                if (Engine.instance().isStarted()) {
+                    connectSwitch.setEnabled(true);
+                    connectSwitch.setChecked(true);
+                    connectSwitch.setSummaryOn(R.string.connected);
+                } else if (Engine.instance().isStarting() || Engine.instance().isStopping()) {
+                    disableConnectSwitchWhileStateIsChanging();
+                } else if (Engine.instance().isStopped() || Engine.instance().isDisconnected()) {
+                    connectSwitch.setEnabled(true);
+                    connectSwitch.setChecked(false);
+                    connectSwitch.setSummaryOff(R.string.disconnected);
+                }
+                connectSwitch.setOnPreferenceChangeListener(onPreferenceChangeListener);
+            }
+        }
+
+        private void disableConnectSwitchWhileStateIsChanging() {
+            final Preference.OnPreferenceChangeListener onPreferenceChangeListener = connectSwitch.getOnPreferenceChangeListener();
+            connectSwitch.setOnPreferenceChangeListener(null);
+            connectSwitch.setEnabled(false);
+            connectSwitch.setSummaryOff(R.string.im_on_it);
+            connectSwitch.setSummaryOn(R.string.im_on_it);
+            connectSwitch.setOnPreferenceChangeListener(onPreferenceChangeListener);
         }
     }
 

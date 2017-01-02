@@ -40,6 +40,7 @@
     <string name="disconnected">Disconnected</string>
     <string name="all_transfers_will_stop_are_you_sure">All transfers will stop.\nAre you sure?</string>
     <string name="connect">Connect</string>
+    <string name="connected">Connected</string>
     <string name="connecting">Connecting</string>
     <string name="disconnect">Disconnect</string>
     <string name="disconnecting">Disconnecting</string>
