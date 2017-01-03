@@ -30,6 +30,8 @@ import android.preference.SwitchPreference;
 import com.frostwire.android.R;
 import com.frostwire.android.core.ConfigurationManager;
 import com.frostwire.android.core.Constants;
+import com.frostwire.android.gui.NetworkManager;
+import com.frostwire.android.gui.transfers.TransferManager;
 import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.AbstractActivity2;
 import com.frostwire.android.gui.views.preference.NumberPickerPreference;
@@ -161,8 +163,13 @@ public final class SettingsActivity2 extends AbstractActivity2
                 wifiOnlySwitch.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                     @Override
                     public boolean onPreferenceChange(Preference preference, Object newValue) {
+                        boolean newVal = (Boolean) newValue;
+                        if (newVal && !NetworkManager.instance().isDataWIFIUp()) {
+                            TransferManager.instance().stopHttpTransfers();
+                            TransferManager.instance().pauseTorrents();
+                            UIUtils.showShortMessage(getActivity(), R.string.wifi_only_transfers_have_been_turned_off);
+                        }
                         return true;
-                        //todo stop transfers if not on wifi
                     }
                 });
             }

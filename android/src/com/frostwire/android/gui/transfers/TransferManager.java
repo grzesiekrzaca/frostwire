@@ -138,6 +138,11 @@ public final class TransferManager {
             return new InvalidBittorrentDownload(R.string.torrent_transfer_aborted_on_mobile_data);
         }
 
+        if (isMobileAndDataSavingsOn()) {
+            return new InvalidDownload(R.string.cloud_download_aborted_on_mobile_data);
+        }
+
+
         if (alreadyDownloading(sr.getDetailsUrl())) {
             transfer = new ExistingDownload();
         }
