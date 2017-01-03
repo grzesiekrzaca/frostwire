@@ -52,7 +52,12 @@ public final class Constants {
     public static final String PREF_KEY_CORE_LAST_SEEN_VERSION = "frostwire.prefs.core.last_seen_version";
 
     public static final String PREF_KEY_NETWORK_ENABLE_DHT = "froswire.prefs.network.enable_dht";
+    /**
+     * @deprecated left for migration purposes and (at least for a time) for old settings menu
+     */
+    @Deprecated
     public static final String PREF_KEY_NETWORK_USE_MOBILE_DATA = "frostwire.prefs.network.use_mobile_data";
+    public static final String PREF_MIGRATION_FINISHED_KEY_NETWORK_USE_MOBILE_DATA_TO_USE_WIFI_ONLY = "frostwire.prefs.migration.use_mobile_data.use_wifi_only";
     public static final String PREF_KEY_NETWORK_USE_WIFI_ONLY = "frostwire.prefs.network.use_wifi_only";
     public static final String PREF_KEY_NETWORK_MAX_CONCURRENT_UPLOADS = "frostwire.prefs.network.max_concurrent_uploads";
 
