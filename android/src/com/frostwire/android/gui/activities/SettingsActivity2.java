@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.preference.SwitchPreference;
 
 import com.frostwire.android.R;
 import com.frostwire.android.core.ConfigurationManager;
@@ -139,11 +140,34 @@ public final class SettingsActivity2 extends AbstractActivity2
     }
 
     public static class Application extends PreferenceFragment {
+
+        SwitchPreference wifiOnlySwitch;
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.settings_application);
         }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            setupWiFiExclusiveSwitch();
+        }
+
+        private void setupWiFiExclusiveSwitch() {
+            wifiOnlySwitch = (SwitchPreference) findPreference(Constants.PREF_KEY_NETWORK_USE_WIFI_ONLY);
+            if (wifiOnlySwitch != null) {
+                wifiOnlySwitch.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                    @Override
+                    public boolean onPreferenceChange(Preference preference, Object newValue) {
+                        return true;
+                        //todo stop transfers if not on wifi
+                    }
+                });
+            }
+        }
+
     }
 
     public static class Search extends PreferenceFragment {
