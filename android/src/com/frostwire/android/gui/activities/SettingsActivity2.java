@@ -54,7 +54,7 @@ public final class SettingsActivity2 extends AbstractActivity2
         implements PreferenceFragment.OnPreferenceStartFragmentCallback {
 
     private static final Logger LOG = Logger.getLogger(SettingsActivity.class);
-    private static final boolean INTERNAL_BUILD = true;
+    private static final boolean INTERNAL_BUILD = false;
 
     /**
      * When starting this activity, the invoking Intent can contain this extra
@@ -113,13 +113,10 @@ public final class SettingsActivity2 extends AbstractActivity2
                 data != null &&
                 data.hasExtra(BuyActivity.EXTRA_KEY_PURCHASE_TIMESTAMP)) {
             // We (onActivityResult) are invoked before onResume()
-            if(currentFragment instanceof Application) {
+            if (currentFragment instanceof Application) {
                 ((Application) currentFragment).payment(data.getLongExtra(BuyActivity.EXTRA_KEY_PURCHASE_TIMESTAMP, 0));
             }
-//            removeAdsPurchaseTime = data.getLongExtra(BuyActivity.EXTRA_KEY_PURCHASE_TIMESTAMP, 0);
-//            LOG.info("onActivityResult: User just purchased something. removeAdsPurchaseTime="+removeAdsPurchaseTime);
-        }
-        else {
+        } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
@@ -191,19 +188,22 @@ public final class SettingsActivity2 extends AbstractActivity2
 
         private void setupStore(long purchaseTimestamp) {
             Preference p = findPreference("frostwire.prefs.offers.buy_no_ads");
-            if (p != null && !Constants.IS_GOOGLE_PLAY_DISTRIBUTION) {
+            if (p == null) {
+                LOG.warn("No-ads preference not found");
+                return;
+            }
+            if (!Constants.IS_GOOGLE_PLAY_DISTRIBUTION) {
                 PreferenceScreen s = getPreferenceScreen();
                 s.removePreference(p);
-            } else if (p != null) {
+            } else {
                 final PlayStore playStore = PlayStore.getInstance();
                 playStore.refresh();
                 final Collection<Product> purchasedProducts = Products.listEnabled(playStore, Products.DISABLE_ADS_FEATURE);
                 if (purchaseTimestamp == 0 && purchasedProducts != null && purchasedProducts.size() > 0) {
                     initRemoveAdsSummaryWithPurchaseInfo(p, purchasedProducts);
-                    //otherwise, a BuyActivity intent has been configured on application_preferences.xml
                 } else if (purchaseTimestamp > 0 &&
-                        (System.currentTimeMillis()-purchaseTimestamp) < 30000) {
-                    p.setSummary(getString(R.string.processing_payment)+"...");
+                        (System.currentTimeMillis() - purchaseTimestamp) < 30000) {
+                    p.setSummary(getString(R.string.processing_payment) + "...");
                     p.setOnPreferenceClickListener(null);
                 } else {
                     p.setSummary(R.string.remove_ads_description);
@@ -212,7 +212,7 @@ public final class SettingsActivity2 extends AbstractActivity2
                         public boolean onPreferenceClick(Preference preference) {
                             PlayStore.getInstance().endAsync();
                             Intent intent = new Intent(getActivity(), BuyActivity.class);
-                            startActivityForResult(intent, BuyActivity.PURCHASE_SUCCESSFUL_RESULT_CODE);
+                            getActivity().startActivityForResult(intent, BuyActivity.PURCHASE_SUCCESSFUL_RESULT_CODE);
                             return true;
                         }
                     });
@@ -239,9 +239,9 @@ public final class SettingsActivity2 extends AbstractActivity2
             p.setOnPreferenceClickListener(new RemoveAdsOnPreferenceClickListener(getActivity(), purchasedProducts));
         }
 
-        public void payment(long longExtra) {
-            removeAdsPurchaseTime = longExtra;
-            LOG.info("onActivityResult: User just purchased something. removeAdsPurchaseTime="+removeAdsPurchaseTime);
+        public void payment(long time) {
+            removeAdsPurchaseTime = time;
+            LOG.info("User just purchased something. removeAdsPurchaseTime=" + removeAdsPurchaseTime);
         }
 
         private static class RemoveAdsOnPreferenceClickListener implements Preference.OnPreferenceClickListener {
@@ -265,21 +265,19 @@ public final class SettingsActivity2 extends AbstractActivity2
                     if (INTERNAL_BUILD) {
                         clicksLeftToConsumeProducts--;
                         LOG.info("If you click again " + clicksLeftToConsumeProducts + " times, all your ONE-TIME purchases will be forced-consumed.");
-                        if (0 >= clicksLeftToConsumeProducts && clicksLeftToConsumeProducts < 11) {
-                            if (clicksLeftToConsumeProducts == 0) {
-                                for (Product p : purchasedProducts) {
-                                    if (p.subscription()) {
-                                        continue;
-                                    }
-                                    PlayStore.getInstance().consume(p);
-                                    LOG.info(" - " + p.description() + " (" + p.sku() + ") force-consumed!");
-                                    UIUtils.showToastMessage(preference.getContext(),
-                                            "Product " + p.sku() + " forced-consumed.",
-                                            Toast.LENGTH_SHORT);
+                        if (clicksLeftToConsumeProducts == 0) {
+                            for (Product p : purchasedProducts) {
+                                if (p.subscription()) {
+                                    continue;
                                 }
-                                if (Ref.alive(activityRef)) {
-                                    activityRef.get().finish();
-                                }
+                                PlayStore.getInstance().consume(p);
+                                LOG.info(" - " + p.description() + " (" + p.sku() + ") force-consumed!");
+                                UIUtils.showToastMessage(preference.getContext(),
+                                        "Product " + p.sku() + " forced-consumed.",
+                                        Toast.LENGTH_SHORT);
+                            }
+                            if (Ref.alive(activityRef)) {
+                                activityRef.get().finish();
                             }
                         }
                     }
