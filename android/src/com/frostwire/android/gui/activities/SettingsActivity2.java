@@ -18,14 +18,14 @@
 
 package com.frostwire.android.gui.activities;
 
+import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
+import android.support.v14.preference.PreferenceFragment;
 import android.support.v7.preference.Preference;
-import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
@@ -44,7 +44,7 @@ import com.frostwire.bittorrent.BTEngine;
  * @author grzesiekrzaca
  */
 public final class SettingsActivity2 extends AbstractActivity2
-        implements PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
+        implements PreferenceFragment.OnPreferenceStartFragmentCallback {
 
     /**
      * When starting this activity, the invoking Intent can contain this extra
@@ -96,7 +96,7 @@ public final class SettingsActivity2 extends AbstractActivity2
     }
 
     @Override
-    public boolean onPreferenceStartFragment(PreferenceFragmentCompat caller, Preference pref) {
+    public boolean onPreferenceStartFragment(PreferenceFragment caller, Preference pref) {
         startPreferencePanel(pref.getFragment(), pref.getExtras(), pref.getTitle().toString(), null, 0);
         return true;
     }
@@ -132,7 +132,7 @@ public final class SettingsActivity2 extends AbstractActivity2
 
     private void switchToFragment(String fragmentName, Bundle args, String title) {
         Fragment f = Fragment.instantiate(this, fragmentName, args);
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         transaction.replace(R.id.activity_settings_content, f);
         transaction.commitAllowingStateLoss();
@@ -142,21 +142,21 @@ public final class SettingsActivity2 extends AbstractActivity2
         }
     }
 
-    public static class Application extends PreferenceFragmentCompat {
+    public static class Application extends PreferenceFragment {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             addPreferencesFromResource(R.xml.settings_application);
         }
     }
 
-    public static class Search extends PreferenceFragmentCompat {
+    public static class Search extends PreferenceFragment {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             addPreferencesFromResource(R.xml.settings_search);
         }
     }
 
-    public static class Torrent extends PreferenceFragmentCompat {
+    public static class Torrent extends PreferenceFragment {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             addPreferencesFromResource(R.xml.settings_torrent);
@@ -294,7 +294,7 @@ public final class SettingsActivity2 extends AbstractActivity2
 
     }
 
-    public static class Other extends PreferenceFragmentCompat {
+    public static class Other extends PreferenceFragment {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             addPreferencesFromResource(R.xml.settings_other);
