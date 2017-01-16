@@ -146,8 +146,7 @@ public class CarouselTab extends FrameLayoutWithOverlay {
     public void setAlbumPhoto(final Activity context, final String album, final String artist) {
         if (!TextUtils.isEmpty(album)) {
             mAlbumArt.setVisibility(View.VISIBLE);
-            mFetcher.loadAlbumImage(artist, album,
-                    MusicUtils.getIdForAlbum(context, album, artist), mAlbumArt);
+            mFetcher.loadAlbumImage(artist, album, MusicUtils.getIdForAlbum(context, album, artist), mAlbumArt);
         } else {
             setDefault(context);
         }
@@ -205,12 +204,13 @@ public class CarouselTab extends FrameLayoutWithOverlay {
     public void setPlaylistOrGenrePhoto(final Activity context,
             final String profileName) {
         if (!TextUtils.isEmpty(profileName)) {
-            final Bitmap image = mFetcher.getCachedBitmap(profileName);
-            if (image != null) {
-                mPhoto.setImageBitmap(image);
-            } else {
-                setDefault(context);
-            }
+            mFetcher.loadPlaylistImage(profileName, mPhoto);
+//            final Bitmap image = mFetcher.getCachedBitmap(profileName);
+//            if (image != null) {
+//                mPhoto.setImageBitmap(image);
+//            } else {
+//                setDefault(context);
+//            }
         } else {
             setDefault(context);
         }

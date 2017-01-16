@@ -26,7 +26,10 @@ import android.widget.ImageView;
 import com.frostwire.android.R;
 import com.andrew.apollo.utils.ApolloUtils;
 import com.andrew.apollo.utils.ThemeUtils;
+import com.frostwire.android.util.CachedDbUriChanger;
 import com.frostwire.android.util.ImageLoader;
+import com.frostwire.android.util.SimpleUriChanger;
+import com.frostwire.android.util.UriChanger;
 
 import java.lang.ref.WeakReference;
 
@@ -78,6 +81,8 @@ public abstract class ImageWorker {
      */
     protected ImageCache mImageCache;
 
+    private final UriChanger uriChanger;
+
     /**
      * Constructor of <code>ImageWorker</code>
      *
@@ -99,6 +104,8 @@ public abstract class ImageWorker {
         mArrayDrawable = new Drawable[2];
         mArrayDrawable[0] = mCurrentDrawable;
         // XXX The second layer is set in the worker task.
+
+        uriChanger = new CachedDbUriChanger(context);
     }
 
     /**
@@ -358,30 +365,66 @@ public abstract class ImageWorker {
         }
     }
 
+
+    public void invalidateArtistImageUri(String artistName) {
+        Uri artistUri = ImageLoader.getArtistArtUri(artistName);
+        uriChanger.removeChangeBehaviour(artistUri);
+    }
+
+    public void invalidateAlbumImageUri(long idForAlbum) {
+        Uri albumArtUri = ImageLoader.getAlbumArtUri(idForAlbum);
+        uriChanger.removeChangeBehaviour(albumArtUri);
+    }
+
+    public void invalidatePlaylistImageUri(String profileName) {
+        Uri playlistArtUri = ImageLoader.getPlaylistArtUri(profileName);
+        uriChanger.removeChangeBehaviour(playlistArtUri);
+    }
+
+    public void associateArtistUri(String artistName, Uri newUri) {
+        Uri baseUri = ImageLoader.getArtistArtUri(artistName);
+        uriChanger.setChangeBehaviour(baseUri, newUri);
+    }
+
+
+    public void associateAlbumUri(long albumId, Uri newUri) {
+        Uri baseUri = ImageLoader.getAlbumArtUri(albumId);
+        uriChanger.setChangeBehaviour(baseUri, newUri);
+    }
+
+
+    public void associatePlaylistUri(String profileName, Uri newUri) {
+        Uri baseUri = ImageLoader.getPlaylistArtUri(profileName);
+        uriChanger.setChangeBehaviour(baseUri, newUri);
+    }
+
     /**
      * Called to fetch the artist or ablum art.
-     *
-     * @param key The unique identifier for the image.
+     *  @param key The unique identifier for the image.
      * @param artistName The artist name for the Last.fm API.
      * @param albumName The album name for the Last.fm API.
+     * @param playlistName
      * @param albumId The album art index, to check for missing artwork.
      * @param imageView The {@link ImageView} used to set the cached
-     *            {@link Bitmap}.
+ *            {@link Bitmap}.
      * @param imageType The type of image URL to fetch for.
      */
     protected void loadImage(final String key, final String artistName, final String albumName,
-            final long albumId, final ImageView imageView, final ImageType imageType) {
+                             String playlistName, final long albumId, final ImageView imageView, final ImageType imageType) {
         if (key == null || mImageCache == null || imageView == null) {
             return;
         }
 
         final ImageLoader loader = ImageLoader.getInstance(mContext.getApplicationContext());
         if (ImageType.ALBUM.equals(imageType)) {
-            final Uri albumArtUri = loader.getAlbumArtUri(albumId);
+            final Uri albumArtUri = uriChanger.changeIfNeeded(ImageLoader.getAlbumArtUri(albumId));
             loader.load(albumArtUri, imageView, R.drawable.default_artwork);
         } else if (ImageType.ARTIST.equals(imageType)) {
-            final Uri artistArtUri = loader.getArtistArtUri(artistName);
+            final Uri artistArtUri = uriChanger.changeIfNeeded(ImageLoader.getArtistArtUri(artistName));
             loader.load(artistArtUri, imageView, R.drawable.default_artwork);
+        } else if (ImageType.PLAYLIST.equals(imageType)) {
+            final Uri playlistUri = uriChanger.changeIfNeeded(ImageLoader.getPlaylistArtUri(playlistName));
+            loader.load(playlistUri, imageView, R.drawable.default_artwork);
         }
 
         // First, check the memory for the image
@@ -422,7 +465,7 @@ public abstract class ImageWorker {
      * Used to define what type of image URL to fetch for, artist or album.
      */
     public enum ImageType {
-        ARTIST, ALBUM;
+        ARTIST, ALBUM, PLAYLIST;
     }
 
 }

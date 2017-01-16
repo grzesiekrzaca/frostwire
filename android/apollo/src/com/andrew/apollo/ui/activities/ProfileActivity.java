@@ -25,6 +25,7 @@ import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -543,44 +544,20 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
         if (requestCode == NEW_PHOTO) {
             if (resultCode == RESULT_OK) {
                 Uri selectedImage = data.getData();
-
                 if (selectedImage.toString().startsWith("content://com.android.providers.media.documents/document/image%3A")) {
                     selectedImage = Uri.parse(selectedImage.toString().replace("com.android.providers.media.documents/document/image%3A","media/external/images/media/"));
                 }
 
-                final String[] filePathColumn = {
-                    MediaStore.Images.Media.DATA
-                };
-
-                try {
-                    Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null,
-                            null, null);
-
-                    if (cursor != null && cursor.moveToFirst()) {
-                        final int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                        final String picturePath = cursor.getString(columnIndex);
-
-                        cursor.close();
-
-                        String key = mProfileName;
-                        if (isArtist()) {
-                            key = mArtistName;
-                        } else if (isAlbum()) {
-                            key = ImageFetcher.generateAlbumCacheKey(mProfileName, mArtistName);
-                        }
-
-                        final Bitmap bitmap = ImageFetcher.decodeSampledBitmapFromFile(picturePath);
-                        mImageFetcher.addBitmapToCache(key, bitmap);
-                        if (isAlbum()) {
-                            mTabCarousel.getAlbumArt().setImageBitmap(bitmap);
-                        } else {
-                            mTabCarousel.getPhoto().setImageBitmap(bitmap);
-                        }
-                    }
-                } catch (Throwable t) {
-                    // it seems to be complaining about not having the '_data' column.
-                    // #fragmentation?
-                    t.printStackTrace();
+                if(isArtist()) {
+                    mImageFetcher.associateArtistUri(mArtistName, selectedImage);
+                    mImageFetcher.loadArtistImage(mArtistName, mTabCarousel.getPhoto());
+                } else if (isAlbum()) {
+                    long id = MusicUtils.getIdForAlbum(this, mProfileName, mArtistName);
+                    mImageFetcher.associateAlbumUri(id, selectedImage);
+                    mImageFetcher.loadAlbumImage(mArtistName, mProfileName, id, mTabCarousel.getPhoto());
+                } else if (isPlaylist()) {
+                    mImageFetcher.associatePlaylistUri(mProfileName, selectedImage);
+                    mImageFetcher.loadPlaylistImage(mProfileName, mTabCarousel.getPhoto());
                 }
             } else {
                 selectOldPhoto();
@@ -613,10 +590,13 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
         removeFromCache();
         // Apply the old photo
         if (isArtist()) {
+            mImageFetcher.invalidateArtistImageUri(mArtistName);
             mTabCarousel.setArtistProfileHeader(this, mArtistName);
         } else if (isAlbum()) {
+            mImageFetcher.invalidateAlbumImageUri(MusicUtils.getIdForAlbum(getApplicationContext(),mProfileName,mArtistName));
             mTabCarousel.setAlbumProfileHeader(this, mProfileName, mArtistName);
         } else {
+            mImageFetcher.invalidatePlaylistImageUri(mProfileName);
             mTabCarousel.setPlaylistOrGenreProfileHeader(this, mProfileName);
         }
     }

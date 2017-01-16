@@ -30,6 +30,7 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.frostwire.android.gui.services.Engine;
@@ -64,6 +65,8 @@ public final class ImageLoader {
 
     private static final String METADATA_AUTHORITY = "metadata";
 
+    private static final String PLAYLIST_AUTHORITY = "playlist";
+
     public static final Uri APPLICATION_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + APPLICATION_AUTHORITY);
 
     public static final Uri ALBUM_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + ALBUM_AUTHORITY);
@@ -71,6 +74,8 @@ public final class ImageLoader {
     public static final Uri ARTIST_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + ARTIST_AUTHORITY);
 
     private static final Uri METADATA_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + METADATA_AUTHORITY);
+
+    public static final Uri PLAYLIST_THUMBNAILS_URI = Uri.parse(SCHEME_IMAGE_SLASH + PLAYLIST_AUTHORITY);
 
     private final ImageCache cache;
     private final Picasso picasso;
@@ -137,16 +142,22 @@ public final class ImageLoader {
         return Uri.withAppendedPath(ImageLoader.METADATA_THUMBNAILS_URI, Uri.encode(uri.toString()));
     }
 
+    public static Uri getPlaylistArtUri(String playlistName) {
+        return Uri.withAppendedPath(ImageLoader.PLAYLIST_THUMBNAILS_URI, playlistName);
+    }
+
     private ImageLoader(Context context) {
         File directory = SystemUtils.getCacheDir(context, "picasso");
         long diskSize = SystemUtils.calculateDiskCacheSize(directory, MIN_DISK_CACHE_SIZE, MAX_DISK_CACHE_SIZE);
         int memSize = SystemUtils.calculateMemoryCacheSize(context);
 
+
+
         this.cache = new ImageCache(directory, diskSize, memSize);
         this.picasso = new Builder(context).addRequestHandler(new ImageRequestHandler(context.getApplicationContext())).
                 memoryCache(cache).executor(Engine.instance().getThreadPool()).build();
-
         picasso.setIndicatorsEnabled(false);
+        picasso.setIndicatorsEnabled(true);
     }
 
     public void load(final Uri primaryUri, final Uri secondaryUri, final Filter filter, final ImageView imageView, final boolean cache) {
@@ -209,8 +220,14 @@ public final class ImageLoader {
 
     public void load(Uri uri, ImageView target, int placeholderResId) {
         if (!shutdown) {
-            picasso.load(uri).noFade().placeholder(placeholderResId).into(target);
+            picasso.load(uri).noFade()
+                    .placeholder(placeholderResId)
+                    .resize(1024,1024)
+                    .onlyScaleDown()
+                    .centerInside()
+                    .into(target);
         }
+        LOG.debug(picasso.getSnapshot().toString());
     }
 
     public void load(Uri uri, ImageView target, int targetWidth, int targetHeight, int placeholderResId) {
@@ -219,11 +236,6 @@ public final class ImageLoader {
         }
     }
 
-    public void load(Uri uri, Target target) {
-        if (!shutdown) {
-            picasso.load(uri).into(target);
-        }
-    }
 
     public Bitmap get(Uri uri) {
         try {
@@ -246,6 +258,10 @@ public final class ImageLoader {
         Bitmap filter(Bitmap source);
 
         String params();
+    }
+
+    public void invalidate(Uri uri) {
+        picasso.invalidate(uri);
     }
 
     private static final class ImageRequestHandler extends RequestHandler {
