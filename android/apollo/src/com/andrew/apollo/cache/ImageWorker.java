@@ -24,11 +24,9 @@ import android.os.AsyncTask;
 import android.widget.ImageView;
 
 import com.frostwire.android.R;
-import com.andrew.apollo.utils.ApolloUtils;
 import com.andrew.apollo.utils.ThemeUtils;
 import com.frostwire.android.util.CachedDbUriChanger;
 import com.frostwire.android.util.ImageLoader;
-import com.frostwire.android.util.SimpleUriChanger;
 import com.frostwire.android.util.UriChanger;
 
 import java.lang.ref.WeakReference;
