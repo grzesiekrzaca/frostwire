@@ -79,7 +79,7 @@ public abstract class ImageWorker {
      */
     protected ImageCache mImageCache;
 
-    private final UriChanger uriChanger;
+    private final UriChanger mUriChanger;
 
     /**
      * Constructor of <code>ImageWorker</code>
@@ -103,7 +103,7 @@ public abstract class ImageWorker {
         mArrayDrawable[0] = mCurrentDrawable;
         // XXX The second layer is set in the worker task.
 
-        uriChanger = new CachedDbUriChanger(context);
+        mUriChanger = new CachedDbUriChanger(context);
     }
 
     /**
@@ -366,34 +366,34 @@ public abstract class ImageWorker {
 
     public void invalidateArtistImageUri(String artistName) {
         Uri artistUri = ImageLoader.getArtistArtUri(artistName);
-        uriChanger.removeChangeBehaviour(artistUri);
+        mUriChanger.removeChangeBehaviour(artistUri);
     }
 
     public void invalidateAlbumImageUri(long idForAlbum) {
         Uri albumArtUri = ImageLoader.getAlbumArtUri(idForAlbum);
-        uriChanger.removeChangeBehaviour(albumArtUri);
+        mUriChanger.removeChangeBehaviour(albumArtUri);
     }
 
     public void invalidatePlaylistImageUri(String profileName) {
         Uri playlistArtUri = ImageLoader.getPlaylistArtUri(profileName);
-        uriChanger.removeChangeBehaviour(playlistArtUri);
+        mUriChanger.removeChangeBehaviour(playlistArtUri);
     }
 
     public void associateArtistUri(String artistName, Uri newUri) {
         Uri baseUri = ImageLoader.getArtistArtUri(artistName);
-        uriChanger.setChangeBehaviour(baseUri, newUri);
+        mUriChanger.setChangeBehaviour(baseUri, newUri);
     }
 
 
     public void associateAlbumUri(long albumId, Uri newUri) {
         Uri baseUri = ImageLoader.getAlbumArtUri(albumId);
-        uriChanger.setChangeBehaviour(baseUri, newUri);
+        mUriChanger.setChangeBehaviour(baseUri, newUri);
     }
 
 
     public void associatePlaylistUri(String profileName, Uri newUri) {
         Uri baseUri = ImageLoader.getPlaylistArtUri(profileName);
-        uriChanger.setChangeBehaviour(baseUri, newUri);
+        mUriChanger.setChangeBehaviour(baseUri, newUri);
     }
 
     /**
@@ -414,17 +414,25 @@ public abstract class ImageWorker {
 
         final ImageLoader loader = ImageLoader.getInstance(mContext.getApplicationContext());
         if (ImageType.ALBUM.equals(imageType)) {
-            final Uri albumArtUri = uriChanger.changeIfNeeded(ImageLoader.getAlbumArtUri(albumId));
+            final Uri albumArtUri = mUriChanger.changeIfNeeded(ImageLoader.getAlbumArtUri(albumId));
             loader.load(albumArtUri, imageView, R.drawable.default_artwork);
         } else if (ImageType.ARTIST.equals(imageType)) {
-            final Uri artistArtUri = uriChanger.changeIfNeeded(ImageLoader.getArtistArtUri(artistName));
+            final Uri artistArtUri = mUriChanger.changeIfNeeded(ImageLoader.getArtistArtUri(artistName));
             loader.load(artistArtUri, imageView, R.drawable.default_artwork);
         } else if (ImageType.PLAYLIST.equals(imageType)) {
-            final Uri playlistUri = uriChanger.changeIfNeeded(ImageLoader.getPlaylistArtUri(playlistName));
+            final Uri playlistUri = mUriChanger.changeIfNeeded(ImageLoader.getPlaylistArtUri(playlistName));
             loader.load(playlistUri, imageView, R.drawable.default_artwork);
         }
 
     }
+
+    /**
+     * helper function to change uri before loading the image
+     */
+    public Uri changeIfNeeded(Uri baseUri){
+        return mUriChanger.changeIfNeeded(baseUri);
+    }
+
 
     /**
      * Subclasses should override this to define any processing or work that

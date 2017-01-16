@@ -130,8 +130,8 @@ public class CarouselTab extends FrameLayoutWithOverlay {
     public void blurPhoto(final Activity context, final String artist, final String album) {
         final ImageLoader loader = ImageLoader.getInstance(context.getApplicationContext());
         ImageLoader.Filter filter = new BlurFilter();
-        loader.load(ImageLoader.getArtistArtUri(artist),
-                    ImageLoader.getAlbumArtUri(MusicUtils.getIdForAlbum(context, album, artist)),
+        loader.load(mFetcher.changeIfNeeded(ImageLoader.getArtistArtUri(artist)),
+                    mFetcher.changeIfNeeded(ImageLoader.getAlbumArtUri(MusicUtils.getIdForAlbum(context, album, artist))),
                     filter,
                     mPhoto,
                     false);

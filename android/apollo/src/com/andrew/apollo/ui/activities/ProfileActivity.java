@@ -556,14 +556,14 @@ public class ProfileActivity extends BaseActivity implements OnPageChangeListene
 
                 if(isArtist()) {
                     mImageFetcher.associateArtistUri(mArtistName, selectedImage);
-                    mImageFetcher.loadArtistImage(mArtistName, mTabCarousel.getPhoto());
+                    mTabCarousel.setArtistProfileHeader(this, mArtistName);
                 } else if (isAlbum()) {
                     long id = MusicUtils.getIdForAlbum(this, mProfileName, mArtistName);
                     mImageFetcher.associateAlbumUri(id, selectedImage);
-                    mImageFetcher.loadAlbumImage(mArtistName, mProfileName, id, mTabCarousel.getPhoto());
+                    mTabCarousel.setAlbumProfileHeader(this, mProfileName, mArtistName);
                 } else if (isPlaylist()) {
                     mImageFetcher.associatePlaylistUri(mProfileName, selectedImage);
-                    mImageFetcher.loadPlaylistImage(mProfileName, mTabCarousel.getPhoto());
+                    mTabCarousel.setPlaylistOrGenreProfileHeader(this, mProfileName);
                 }
             } else {
                 selectOldPhoto();
