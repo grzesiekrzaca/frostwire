@@ -16,8 +16,6 @@ import android.app.Activity;
 import android.app.SearchManager;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,11 +23,11 @@ import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
+
 import com.andrew.apollo.Config;
 import com.andrew.apollo.adapters.PagerAdapter;
 import com.andrew.apollo.cache.ImageFetcher;
@@ -37,19 +35,27 @@ import com.andrew.apollo.menu.FragmentMenuItems;
 import com.andrew.apollo.menu.PhotoSelectionDialog;
 import com.andrew.apollo.menu.PhotoSelectionDialog.ProfileType;
 import com.andrew.apollo.ui.fragments.TabFragmentOrder;
-import com.andrew.apollo.ui.fragments.profile.*;
-import com.andrew.apollo.utils.*;
+import com.andrew.apollo.ui.fragments.profile.AlbumSongFragment;
+import com.andrew.apollo.ui.fragments.profile.ArtistAlbumFragment;
+import com.andrew.apollo.ui.fragments.profile.ArtistSongFragment;
+import com.andrew.apollo.ui.fragments.profile.FavoriteFragment;
+import com.andrew.apollo.ui.fragments.profile.GenreSongFragment;
+import com.andrew.apollo.ui.fragments.profile.LastAddedFragment;
+import com.andrew.apollo.ui.fragments.profile.PlaylistSongFragment;
+import com.andrew.apollo.utils.ApolloUtils;
+import com.andrew.apollo.utils.MusicUtils;
+import com.andrew.apollo.utils.NavUtils;
+import com.andrew.apollo.utils.PreferenceUtils;
+import com.andrew.apollo.utils.SortOrder;
 import com.andrew.apollo.widgets.ProfileTabCarousel;
 import com.andrew.apollo.widgets.ProfileTabCarousel.Listener;
 import com.frostwire.android.R;
 import com.frostwire.util.Ref;
 
-import java.lang.ref.WeakReference;
-
 /**
  * The {@link Activity} is used to display the data for specific
  * artists, albums, playlists, and genres. This class is only used on phones.
- * 
+ *
  * @author Andrew Neal (andrewdneal@gmail.com)
  */
 public class ProfileActivity extends BaseActivity implements OnPageChangeListener, Listener {

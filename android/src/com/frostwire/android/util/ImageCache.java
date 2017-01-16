@@ -50,7 +50,7 @@ final class ImageCache implements Cache {
     }
 
     @Override
-    public synchronized Bitmap get(String key) {
+    public Bitmap get(String key) {
         Bitmap bmp = mem.get(key);
         if (bmp == null && !isMain()) {
             bmp = diskGet(key);
@@ -59,7 +59,7 @@ final class ImageCache implements Cache {
     }
 
     @Override
-    public synchronized void set(String key, Bitmap bitmap) {
+    public void set(String key, Bitmap bitmap) {
         mem.set(key, bitmap);
         diskPut(key, bitmap);
     }

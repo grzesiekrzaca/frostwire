@@ -82,7 +82,7 @@ public class ImageFetcher extends ImageWorker {
 
     public void loadPlaylistImage(final String playlistName,
                                   final ImageView imageView) {
-        loadImage("not Null - (unused value in this cache)", null, null, playlistName, -1, imageView, ImageType.PLAYLIST);
+        loadImage(null, null, playlistName, -1, imageView, ImageType.PLAYLIST);
     }
 
 
@@ -91,7 +91,7 @@ public class ImageFetcher extends ImageWorker {
      */
     public void loadAlbumImage(final String artistName, final String albumName, final long albumId,
             final ImageView imageView) {
-        loadImage(generateAlbumCacheKey(albumName, artistName), artistName, albumName, null, albumId, imageView,
+        loadImage(artistName, albumName, null, albumId, imageView,
                 ImageType.ALBUM);
     }
 
@@ -99,7 +99,7 @@ public class ImageFetcher extends ImageWorker {
      * Used to fetch the current artwork.
      */
     public void loadCurrentArtwork(final ImageView imageView) {
-        loadImage(generateAlbumCacheKey(MusicUtils.getAlbumName(), MusicUtils.getArtistName()),
+        loadImage(
                 MusicUtils.getArtistName(), MusicUtils.getAlbumName(), null, MusicUtils.getCurrentAlbumId(),
                 imageView, ImageType.ALBUM);
     }
@@ -108,14 +108,14 @@ public class ImageFetcher extends ImageWorker {
      * Used to fetch artist images.
      */
     public void loadArtistImage(final String key, final ImageView imageView) {
-        loadImage(key, key, null, null, -1, imageView, ImageType.ARTIST);
+        loadImage(key, null, null, -1, imageView, ImageType.ARTIST);
     }
 
     /**
      * Used to fetch the current artist image.
      */
     public void loadCurrentArtistImage(final ImageView imageView) {
-        loadImage(MusicUtils.getArtistName(), MusicUtils.getArtistName(), null, null, -1, imageView,
+        loadImage(MusicUtils.getArtistName(), null, null, -1, imageView,
                 ImageType.ARTIST);
     }
 

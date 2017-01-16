@@ -30,13 +30,18 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.widget.ImageView;
 
 import com.frostwire.android.gui.services.Engine;
 import com.frostwire.util.Logger;
-import com.squareup.picasso.*;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.MemoryPolicy;
+import com.squareup.picasso.NetworkPolicy;
+import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Picasso.Builder;
+import com.squareup.picasso.Request;
+import com.squareup.picasso.RequestHandler;
+import com.squareup.picasso.Transformation;
 
 import java.io.File;
 import java.io.IOException;
@@ -152,12 +157,10 @@ public final class ImageLoader {
         int memSize = SystemUtils.calculateMemoryCacheSize(context);
 
 
-
         this.cache = new ImageCache(directory, diskSize, memSize);
         this.picasso = new Builder(context).addRequestHandler(new ImageRequestHandler(context.getApplicationContext())).
                 memoryCache(cache).executor(Engine.instance().getThreadPool()).build();
         picasso.setIndicatorsEnabled(false);
-        picasso.setIndicatorsEnabled(true);
     }
 
     public void load(final Uri primaryUri, final Uri secondaryUri, final Filter filter, final ImageView imageView, final boolean cache) {
@@ -222,12 +225,11 @@ public final class ImageLoader {
         if (!shutdown) {
             picasso.load(uri).noFade()
                     .placeholder(placeholderResId)
-                    .resize(1024,1024)
+                    .resize(1024, 1024)
                     .onlyScaleDown()
                     .centerInside()
                     .into(target);
         }
-        LOG.debug(picasso.getSnapshot().toString());
     }
 
     public void load(Uri uri, ImageView target, int targetWidth, int targetHeight, int placeholderResId) {

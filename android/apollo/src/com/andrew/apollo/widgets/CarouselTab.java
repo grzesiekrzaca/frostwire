@@ -205,12 +205,6 @@ public class CarouselTab extends FrameLayoutWithOverlay {
             final String profileName) {
         if (!TextUtils.isEmpty(profileName)) {
             mFetcher.loadPlaylistImage(profileName, mPhoto);
-//            final Bitmap image = mFetcher.getCachedBitmap(profileName);
-//            if (image != null) {
-//                mPhoto.setImageBitmap(image);
-//            } else {
-//                setDefault(context);
-//            }
         } else {
             setDefault(context);
         }

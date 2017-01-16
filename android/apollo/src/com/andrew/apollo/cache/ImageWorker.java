@@ -398,18 +398,17 @@ public abstract class ImageWorker {
 
     /**
      * Called to fetch the artist or ablum art.
-     *  @param key The unique identifier for the image.
      * @param artistName The artist name for the Last.fm API.
      * @param albumName The album name for the Last.fm API.
      * @param playlistName
      * @param albumId The album art index, to check for missing artwork.
      * @param imageView The {@link ImageView} used to set the cached
- *            {@link Bitmap}.
+*            {@link Bitmap}.
      * @param imageType The type of image URL to fetch for.
      */
-    protected void loadImage(final String key, final String artistName, final String albumName,
+    protected void loadImage(final String artistName, final String albumName,
                              String playlistName, final long albumId, final ImageView imageView, final ImageType imageType) {
-        if (key == null || mImageCache == null || imageView == null) {
+        if (mImageCache == null || imageView == null) {
             return;
         }
 
@@ -425,27 +424,6 @@ public abstract class ImageWorker {
             loader.load(playlistUri, imageView, R.drawable.default_artwork);
         }
 
-        // First, check the memory for the image
-        /**
-        final Bitmap lruBitmap = mImageCache.getBitmapFromMemCache(key);
-        if (lruBitmap != null && imageView != null) {
-            // Bitmap found in memory cache
-            imageView.setImageBitmap(lruBitmap);
-        } else if (executePotentialWork(key, imageView)
-                && imageView != null && !mImageCache.isDiskCachePaused()) {
-            // Otherwise run the worker task
-            final BitmapWorkerTask bitmapWorkerTask = new BitmapWorkerTask(imageView, imageType);
-            final AsyncDrawable asyncDrawable = new AsyncDrawable(mResources, mDefault,
-                    bitmapWorkerTask);
-            imageView.setImageDrawable(asyncDrawable);
-            try {
-                ApolloUtils.execute(false, bitmapWorkerTask, key,
-                        artistName, albumName, String.valueOf(albumId));
-            } catch (RejectedExecutionException e) {
-                // Executor has exhausted queue space, show default artwork
-                imageView.setImageBitmap(getDefaultArtwork());
-            }
-        }*/
     }
 
     /**
