@@ -17,10 +17,14 @@
 
 package com.frostwire.android.gui.views;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v14.preference.PreferenceFragment;
 import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceCategory;
+import android.support.v7.preference.PreferenceGroupAdapter;
 import android.support.v7.preference.TwoStatePreference;
+import android.view.View;
 
 /**
  * @author gubatron
@@ -39,6 +43,47 @@ public abstract class AbstractPreferenceFragment extends PreferenceFragment {
         addPreferencesFromResource(preferencesResId);
         initComponents();
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        fixPaddingProblemsOnOldAPIs();
+    }
+
+    /**
+     * This function fixes problems with the support library on older APIs (JellyBeans 16-18)
+     * The problem is that when the Preference Category is inflated the
+     * attributes of padding get deleted due to calling a function (setBackground) that clears the padding
+     * This leads to padding being always 0 on JellyBeans. This function manually forces
+     * correct padding for the view
+     */
+    protected void fixPaddingProblemsOnOldAPIs() {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            getListView().post(new Runnable() {
+                @Override
+                public void run() {
+                    int count = getListView().getChildCount();
+                    for (int i = 0; i < count; i++) {
+                        View v = getListView().getChildAt(i);
+                        int pos = getListView().getChildAdapterPosition(v);
+                        Preference p = ((PreferenceGroupAdapter) getListView().getAdapter()).getItem(pos);
+                        if (p instanceof PreferenceCategory) {
+                            float scale = getResources().getDisplayMetrics().density;
+                            v.setPadding(dp2px(16, scale),
+                                    dp2px(16, scale),
+                                    dp2px(16, scale),
+                                    dp2px(16, scale));
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    protected final int dp2px(int value, float scale) {
+        return (int) (value * scale + 0.5f);
+    }
+
 
     protected void initComponents() {
     }

@@ -18,9 +18,12 @@
 package com.frostwire.android.gui.fragments.preference;
 
 import android.app.DialogFragment;
+import android.os.Build;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceCategory;
+import android.support.v7.preference.PreferenceGroupAdapter;
 import android.support.v7.preference.SwitchPreferenceCompat;
+import android.view.View;
 
 import com.frostwire.android.AndroidPlatform;
 import com.frostwire.android.R;
@@ -44,6 +47,35 @@ public final class ApplicationFragment extends AbstractPreferenceFragment {
     protected void initComponents() {
         setupConnectSwitch();
         setupStorageOption();
+    }
+
+    @Override
+    protected void fixPaddingProblemsOnOldAPIs() {
+        super.fixPaddingProblemsOnOldAPIs();
+        /**
+         * this fixes padding problems in custom preference on older APIs
+         */
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            getListView().post(new Runnable() {
+                @Override
+                public void run() {
+                    int count = getListView().getChildCount();
+                    for (int i = 0; i < count; i++) {
+                        View v = getListView().getChildAt(i);
+                        int pos = getListView().getChildAdapterPosition(v);
+                        Preference p = ((PreferenceGroupAdapter) getListView().getAdapter()).getItem(pos);
+                        if (getString(R.string.remove_ads).equals(p.getTitle())) {
+                            float scale = getResources().getDisplayMetrics().density;
+                            v.setPadding(dp2px(16, scale),
+                                    dp2px(16, scale),
+                                    dp2px(16, scale),
+                                    dp2px(16, scale));
+                            break;
+                        }
+                    }
+                }
+            });
+        }
     }
 
     @Override
