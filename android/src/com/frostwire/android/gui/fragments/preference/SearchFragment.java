@@ -17,8 +17,14 @@
 
 package com.frostwire.android.gui.fragments.preference;
 
+import android.support.v4.content.ContextCompat;
 import android.support.v7.preference.CheckBoxPreference;
 import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceGroup;
+import android.support.v7.preference.PreferenceGroupAdapter;
+import android.support.v7.preference.PreferenceScreen;
+import android.support.v7.preference.PreferenceViewHolder;
+import android.support.v7.widget.RecyclerView;
 
 import com.frostwire.android.R;
 import com.frostwire.android.gui.SearchEngine;
@@ -143,6 +149,35 @@ public final class SearchFragment extends AbstractPreferenceFragment {
         if (!checked && archivePreference != null) {
             setChecked(archivePreference, true, false);
             UIUtils.showShortMessage(getView(), R.string.search_preferences_one_engine_checked_always);
+        }
+    }
+
+    @Override
+    protected RecyclerView.Adapter onCreateAdapter(PreferenceScreen preferenceScreen) {
+        return new CheckedAwarePreferenceGroupAdapter(preferenceScreen, R.color.selected_search_background, R.color.basic_white);
+    }
+
+    private class CheckedAwarePreferenceGroupAdapter extends PreferenceGroupAdapter {
+
+        final int checkedDrawableId;
+        final int unCheckedDrawableId;
+
+        CheckedAwarePreferenceGroupAdapter(PreferenceGroup preferenceGroup, int checkedDrawableId, int unCheckedDrawableId) {
+            super(preferenceGroup);
+
+            this.checkedDrawableId = checkedDrawableId;
+            this.unCheckedDrawableId = unCheckedDrawableId;
+        }
+
+        @Override
+        public void onBindViewHolder(PreferenceViewHolder holder, int position) {
+            final CheckBoxPreference preference = (CheckBoxPreference) getItem(position);
+
+            preference.onBindViewHolder(holder);
+            if (!preference.getKey().equals("frostwire.prefs.search.preference_category.select_all")) {
+                holder.itemView.setBackground(preference.isChecked() ? ContextCompat.getDrawable(getActivity(), checkedDrawableId) :
+                        ContextCompat.getDrawable(getActivity(), unCheckedDrawableId));
+            }
         }
     }
 }
