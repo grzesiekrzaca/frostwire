@@ -28,7 +28,6 @@ import android.support.v7.preference.PreferenceViewHolder;
 import android.support.v7.widget.RecyclerView;
 
 import com.frostwire.android.R;
-import com.frostwire.android.core.Constants;
 import com.frostwire.android.gui.SearchEngine;
 import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.AbstractPreferenceFragment;
