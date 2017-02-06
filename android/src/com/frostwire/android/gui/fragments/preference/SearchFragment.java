@@ -17,6 +17,7 @@
 
 package com.frostwire.android.gui.fragments.preference;
 
+import android.app.Activity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.preference.CheckBoxPreference;
 import android.support.v7.preference.Preference;
@@ -31,7 +32,9 @@ import com.frostwire.android.core.Constants;
 import com.frostwire.android.gui.SearchEngine;
 import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.AbstractPreferenceFragment;
+import com.frostwire.util.Ref;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,6 +43,8 @@ import java.util.Map;
  * @author aldenml
  */
 public final class SearchFragment extends AbstractPreferenceFragment {
+
+    public static final String PREF_KEY_SEARCH_SELECT_ALL = "frostwire.prefs.search.preference_category.select_all";
 
     private final Map<CheckBoxPreference, SearchEngine> activeSearchEnginePreferences;
 
@@ -54,7 +59,7 @@ public final class SearchFragment extends AbstractPreferenceFragment {
     }
 
     private void setupSearchEngines() {
-        final CheckBoxPreference selectAll = findPreference(Constants.PREF_KEY_SEARCH_SELECT_ALL);
+        final CheckBoxPreference selectAll = findPreference(PREF_KEY_SEARCH_SELECT_ALL);
 
         Map<CheckBoxPreference, SearchEngine> inactiveSearchPreferences = new HashMap<>();
         fillSearchEnginePreferences(activeSearchEnginePreferences, inactiveSearchPreferences);
@@ -101,7 +106,7 @@ public final class SearchFragment extends AbstractPreferenceFragment {
     }
 
     private void updateSelectAllCheckBox() {
-        CheckBoxPreference cb = findPreference(Constants.PREF_KEY_SEARCH_SELECT_ALL);
+        CheckBoxPreference cb = findPreference(PREF_KEY_SEARCH_SELECT_ALL);
         boolean allChecked = areAllEnginesChecked(activeSearchEnginePreferences, true);
         setChecked(cb, allChecked, false);
         cb.setTitle(allChecked ? R.string.deselect_all : R.string.select_all);
@@ -155,15 +160,17 @@ public final class SearchFragment extends AbstractPreferenceFragment {
 
     @Override
     protected RecyclerView.Adapter onCreateAdapter(PreferenceScreen preferenceScreen) {
-        return new CheckedAwarePreferenceGroupAdapter(preferenceScreen, R.color.selected_search_background, R.color.basic_white);
+        return new CheckedAwarePreferenceGroupAdapter(getActivity(), preferenceScreen, R.color.selected_search_background, R.color.basic_white);
     }
 
-    private class CheckedAwarePreferenceGroupAdapter extends PreferenceGroupAdapter {
+    private static class CheckedAwarePreferenceGroupAdapter extends PreferenceGroupAdapter {
         final int checkedDrawableId;
         final int unCheckedDrawableId;
+        final WeakReference<Activity> activityRef;
 
-        CheckedAwarePreferenceGroupAdapter(PreferenceGroup preferenceGroup, int checkedDrawableId, int unCheckedDrawableId) {
+        CheckedAwarePreferenceGroupAdapter(Activity activity, PreferenceGroup preferenceGroup, int checkedDrawableId, int unCheckedDrawableId) {
             super(preferenceGroup);
+            activityRef = Ref.weak(activity);
             this.checkedDrawableId = checkedDrawableId;
             this.unCheckedDrawableId = unCheckedDrawableId;
         }
@@ -172,9 +179,9 @@ public final class SearchFragment extends AbstractPreferenceFragment {
         public void onBindViewHolder(PreferenceViewHolder holder, int position) {
             final CheckBoxPreference preference = (CheckBoxPreference) getItem(position);
             preference.onBindViewHolder(holder);
-            if (!preference.getKey().equals(Constants.PREF_KEY_SEARCH_SELECT_ALL)) {
+            if (!preference.getKey().equals(PREF_KEY_SEARCH_SELECT_ALL) && Ref.alive(activityRef)) {
                 int drawableId = preference.isChecked() ? checkedDrawableId : unCheckedDrawableId;
-                holder.itemView.setBackground(ContextCompat.getDrawable(getActivity(), drawableId));
+                holder.itemView.setBackground(ContextCompat.getDrawable(activityRef.get(), drawableId));
             }
         }
     }
