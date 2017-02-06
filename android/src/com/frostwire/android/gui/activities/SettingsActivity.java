@@ -393,7 +393,7 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 TwoStatePreference cbPreference = (TwoStatePreference) preference;
-                ToggleAllSearchEnginesPreference selectAll = (ToggleAllSearchEnginesPreference) findPreference("frostwire.prefs.search.preference_category.select_all");
+                ToggleAllSearchEnginesPreference selectAll = (ToggleAllSearchEnginesPreference) findPreference(Constants.PREF_KEY_SEARCH_SELECT_ALL);
 
                 selectAll.setClickListenerEnabled(false);
                 if (!cbPreference.isChecked()) {

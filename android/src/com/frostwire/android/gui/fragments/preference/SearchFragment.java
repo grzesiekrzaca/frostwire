@@ -27,6 +27,7 @@ import android.support.v7.preference.PreferenceViewHolder;
 import android.support.v7.widget.RecyclerView;
 
 import com.frostwire.android.R;
+import com.frostwire.android.core.Constants;
 import com.frostwire.android.gui.SearchEngine;
 import com.frostwire.android.gui.util.UIUtils;
 import com.frostwire.android.gui.views.AbstractPreferenceFragment;
@@ -53,7 +54,7 @@ public final class SearchFragment extends AbstractPreferenceFragment {
     }
 
     private void setupSearchEngines() {
-        final CheckBoxPreference selectAll = findPreference("frostwire.prefs.search.preference_category.select_all");
+        final CheckBoxPreference selectAll = findPreference(Constants.PREF_KEY_SEARCH_SELECT_ALL);
 
         Map<CheckBoxPreference, SearchEngine> inactiveSearchPreferences = new HashMap<>();
         fillSearchEnginePreferences(activeSearchEnginePreferences, inactiveSearchPreferences);
@@ -100,7 +101,7 @@ public final class SearchFragment extends AbstractPreferenceFragment {
     }
 
     private void updateSelectAllCheckBox() {
-        CheckBoxPreference cb = findPreference("frostwire.prefs.search.preference_category.select_all");
+        CheckBoxPreference cb = findPreference(Constants.PREF_KEY_SEARCH_SELECT_ALL);
         boolean allChecked = areAllEnginesChecked(activeSearchEnginePreferences, true);
         setChecked(cb, allChecked, false);
         cb.setTitle(allChecked ? R.string.deselect_all : R.string.select_all);
@@ -158,13 +159,11 @@ public final class SearchFragment extends AbstractPreferenceFragment {
     }
 
     private class CheckedAwarePreferenceGroupAdapter extends PreferenceGroupAdapter {
-
         final int checkedDrawableId;
         final int unCheckedDrawableId;
 
         CheckedAwarePreferenceGroupAdapter(PreferenceGroup preferenceGroup, int checkedDrawableId, int unCheckedDrawableId) {
             super(preferenceGroup);
-
             this.checkedDrawableId = checkedDrawableId;
             this.unCheckedDrawableId = unCheckedDrawableId;
         }
@@ -172,11 +171,10 @@ public final class SearchFragment extends AbstractPreferenceFragment {
         @Override
         public void onBindViewHolder(PreferenceViewHolder holder, int position) {
             final CheckBoxPreference preference = (CheckBoxPreference) getItem(position);
-
             preference.onBindViewHolder(holder);
-            if (!preference.getKey().equals("frostwire.prefs.search.preference_category.select_all")) {
-                holder.itemView.setBackground(preference.isChecked() ? ContextCompat.getDrawable(getActivity(), checkedDrawableId) :
-                        ContextCompat.getDrawable(getActivity(), unCheckedDrawableId));
+            if (!preference.getKey().equals(Constants.PREF_KEY_SEARCH_SELECT_ALL)) {
+                int drawableId = preference.isChecked() ? checkedDrawableId : unCheckedDrawableId;
+                holder.itemView.setBackground(ContextCompat.getDrawable(getActivity(), drawableId));
             }
         }
     }
