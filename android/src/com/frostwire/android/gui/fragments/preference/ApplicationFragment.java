@@ -97,7 +97,7 @@ public final class ApplicationFragment extends AbstractPreferenceFragment {
                 boolean newVal = (boolean) newValue;
                 if (newVal && !NetworkManager.instance().isTunnelUp()) {
                     disconnect();
-                    setChecked((TwoStatePreference) findPreference("frostwire.prefs.internal.connect_disconnect"), false, false);
+                    setChecked((TwoStatePreference) findPreference(Constants.PREF_KEY_NETWORK_BITTORRENT_ON_VPN_ONLY), false, false);
                     UIUtils.showShortMessage(getView(), R.string.switch_off_engine_without_vpn);
                 }
                 return true;
